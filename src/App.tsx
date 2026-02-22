@@ -445,41 +445,60 @@ export default function App() {
                       <p className="text-xs text-[#1D1D1F]/30 font-medium italic">Your command history will appear here</p>
                     </div>
                   ) : (
-                    history.map((item) => (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="group p-4 bg-[#F5F5F7]/50 border border-transparent hover:border-blue-500/20 hover:bg-white rounded-2xl transition-all cursor-pointer relative"
-                        onClick={() => {
-                          setUrl(item.url);
-                          setType(item.type);
-                          setShowHistory(false);
-                        }}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {item.type === 'video' && <Video className="w-3 h-3 text-blue-500" />}
-                            {item.type === 'audio' && <Music className="w-3 h-3 text-purple-500" />}
-                            {item.type === 'subtitles' && <Subtitles className="w-3 h-3 text-emerald-500" />}
-                            <span className="text-[9px] font-bold uppercase text-[#1D1D1F]/40 tracking-widest">{item.type}</span>
+                    history.map((item) => {
+                      const isYoutube = item.url.includes('youtube.com') || item.url.includes('youtu.be');
+                      const videoId = isYoutube ? (item.url.split('v=')[1]?.split('&')[0] || item.url.split('/').pop()) : null;
+                      
+                      return (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="group p-3 bg-[#F5F5F7]/50 border border-transparent hover:border-blue-500/20 hover:bg-white rounded-2xl transition-all cursor-pointer relative flex gap-3"
+                          onClick={() => {
+                            setUrl(item.url);
+                            setType(item.type);
+                            setShowHistory(false);
+                          }}
+                        >
+                          <div className="w-16 h-10 bg-[#F5F5F7] rounded-lg flex items-center justify-center overflow-hidden shrink-0 border border-[#1D1D1F]/5">
+                            {isYoutube ? (
+                              <img 
+                                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`} 
+                                alt="Thumb"
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <Youtube className="w-4 h-4 text-[#1D1D1F]/10" />
+                            )}
                           </div>
-                          <span className="text-[9px] text-[#1D1D1F]/30 font-mono">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                        <p className="text-xs font-medium truncate text-[#1D1D1F]/70 pr-8">{item.url}</p>
-                        <div className="absolute top-1/2 -translate-y-1/2 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyFromHistory(item.command);
-                            }}
-                            className="p-2 bg-white border border-[#1D1D1F]/10 rounded-xl shadow-sm hover:text-blue-600 transition-all active:scale-90"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <div className="flex items-center gap-1.5">
+                                {item.type === 'video' && <Video className="w-2.5 h-2.5 text-blue-500" />}
+                                {item.type === 'audio' && <Music className="w-2.5 h-2.5 text-purple-500" />}
+                                {item.type === 'subtitles' && <Subtitles className="w-2.5 h-2.5 text-emerald-500" />}
+                                <span className="text-[8px] font-bold uppercase text-[#1D1D1F]/40 tracking-widest">{item.type}</span>
+                              </div>
+                              <span className="text-[8px] text-[#1D1D1F]/30 font-mono">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <p className="text-[10px] font-medium truncate text-[#1D1D1F]/70 pr-6">{item.url}</p>
+                          </div>
+                          <div className="absolute top-1/2 -translate-y-1/2 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyFromHistory(item.command);
+                              }}
+                              className="p-1.5 bg-white border border-[#1D1D1F]/10 rounded-lg shadow-sm hover:text-blue-600 transition-all active:scale-90"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      );
+                    })
                   )}
                 </div>
                 
