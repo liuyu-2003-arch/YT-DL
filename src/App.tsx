@@ -155,12 +155,13 @@ export default function App() {
                `  [ -f "$f" ] || continue; \\\n` +
                `  [[ "$f" == *"[原始字幕]"* ]] || [[ "$f" == *"[自动翻译]"* ]] || [[ "$f" == *"[自动生成]"* ]] && continue; \\\n` +
                `  new_name="$f"; \\\n` +
-               `  if [[ "$f" == *".orig."* ]]; then label="原始字幕"; \\\n` +
-               `  elif [[ "$f" == *"-en."* ]] || [[ "$f" == *"-zh-"* ]] || [[ "$f" == *".zh-Hans."* ]] || [[ "$f" == *".zh-Hant."* ]]; then label="自动翻译"; \\\n` +
-               `  else label="自动生成"; fi; \\\n` +
+               `  if [[ "$f" == *"orig"* ]]; then label="原始字幕"; \\\n` +
+               `  elif [[ "$f" == *"en-en"* ]]; then label="自动生成"; \\\n` +
+               `  elif [[ "$f" == *"-en"* ]] || [[ "$f" == *"-zh-"* ]] || [[ "$f" == *".zh-Hans."* ]] || [[ "$f" == *".zh-Hant."* ]]; then label="自动翻译"; \\\n` +
+               `  else label="原始字幕"; fi; \\\n` +
                `  new_name="\${f%.*}.[\$label].srt"; \\\n` +
                `  [ "$f" != "$new_name" ] && [ ! -f "$new_name" ] && mv "$f" "$new_name"; \\\n` +
-               `  sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" | uniq > "\${new_name%.*}.txt" ;; \\\n` +
+               `  sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" | uniq > "\${new_name%.*}.txt" ; \\\n` +
                `done && \\\n` +
                `echo "✅ 字幕重命名与文本提取完成！"`;
       
