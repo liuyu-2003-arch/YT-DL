@@ -58,9 +58,15 @@ export default function App() {
 
   // Handle URL parameters on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlParam = params.get('u') || params.get('url');
-    const typeParam = (params.get('t') || params.get('type')) as DownloadType;
+    const getParam = (name: string) => {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.has(name)) return searchParams.get(name);
+      const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.hash.substring(1));
+      return hashParams.get(name);
+    };
+
+    const urlParam = getParam('u') || getParam('url');
+    const typeParam = (getParam('t') || getParam('type')) as DownloadType;
 
     if (urlParam) setUrl(decodeURIComponent(urlParam));
     if (typeParam && ['video', 'audio', 'subtitles'].includes(typeParam)) setType(typeParam);
@@ -159,8 +165,14 @@ export default function App() {
 
   // Auto-copy effect
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const autoCopy = params.get('a') === '1' || params.get('autocopy') === 'true';
+    const getParam = (name: string) => {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.has(name)) return searchParams.get(name);
+      const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || window.location.hash.substring(1));
+      return hashParams.get(name);
+    };
+
+    const autoCopy = getParam('a') === '1' || getParam('autocopy') === 'true';
     
     if (autoCopy && generatedCommand && isValid) {
       handleCopy();
@@ -190,7 +202,7 @@ export default function App() {
     setTimeout(() => setShareCopied(false), 2000);
   };
 
-  const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('https://yt-dlp.324893.xyz/?url='+url+'&type=subtitles&autocopy=true','_blank');})();`;
+  const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('https://yt-dlp.324893.xyz/#?url='+url+'&type=subtitles&autocopy=true','_blank');})();`;
 
   useEffect(() => {
     if (bookmarkletRef.current) {
