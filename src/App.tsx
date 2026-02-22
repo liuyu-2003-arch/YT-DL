@@ -24,7 +24,8 @@ import {
   HelpCircle,
   ChevronRight,
   Home,
-  Globe
+  Globe,
+  Mic
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -33,7 +34,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-type DownloadType = 'video' | 'audio' | 'subtitles';
+type DownloadType = 'video' | 'audio' | 'subtitles' | 'transcribe';
 
 interface HistoryItem {
   id: string;
@@ -78,7 +79,7 @@ export default function App() {
     const typeParam = (getParam('t') || getParam('type')) as DownloadType;
 
     if (urlParam) setUrl(decodeURIComponent(urlParam));
-    if (typeParam && ['video', 'audio', 'subtitles'].includes(typeParam)) setType(typeParam);
+    if (typeParam && ['video', 'audio', 'subtitles', 'transcribe'].includes(typeParam)) setType(typeParam);
   }, []);
 
   // Load history from localStorage
@@ -148,11 +149,14 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `(echo "🔍 正在尝试下载现有字幕..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh.*" --convert-subs srt --skip-download -k --no-cache-dir 2>&1 | tee /dev/stderr | grep -qE "There are no subtitles|HTTP Error 429") && \\\n` +
-               `echo "⚠️ 无法获取在线字幕，正在通过 Whisper 语音识别生成..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt --output_dir \\"${outputPath}/\\"" || \\\n` +
-               `echo "✅ 处理完成！请在目录中查看 .srt 或 .vtt 文件：${outputPath}"`;
+        return `echo "🔍 正在尝试下载现有字幕..." && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh.*" --convert-subs srt --skip-download -k --no-cache-dir && \\\n` +
+               `echo "✅ 字幕下载完成！请在目录中查看 .srt 或 .vtt 文件：${outputPath}"`;
+      
+      case 'transcribe':
+        return `echo "🎙️ 正在启动 Whisper 语音识别转录..." && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt --output_dir \\"${outputPath}/\\"" && \\\n` +
+               `echo "✅ 转录完成！请在目录中查看 .srt 文件：${outputPath}"`;
       
       default:
         return '';
@@ -419,25 +423,32 @@ export default function App() {
               <div className="space-y-6">
                 <div className="space-y-3">
                   <label className="text-[11px] font-black uppercase tracking-[0.15em] text-black/30 ml-1 italic">Download Type</label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {(['subtitles', 'video', 'audio'] as DownloadType[]).map((t) => (
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['subtitles', 'transcribe', 'video', 'audio'] as DownloadType[]).map((t) => (
                       <button
                         key={t}
                         onClick={() => setType(t)}
                         className={cn(
-                          "flex items-center justify-between px-5 py-3.5 rounded-2xl border transition-all duration-300",
+                          "flex items-center justify-between px-4 py-3 rounded-2xl border transition-all duration-300",
                           type === t 
                             ? "bg-black text-white shadow-lg shadow-black/10 ring-1 ring-black/20" 
                             : "bg-black/5 border-transparent text-black/40 hover:bg-black/10 hover:border-black/10"
                         )}
                       >
-                        <div className="flex items-center gap-3">
-                          {t === 'video' && <Video className="w-4 h-4" />}
-                          {t === 'audio' && <Music className="w-4 h-4" />}
-                          {t === 'subtitles' && <Subtitles className="w-4 h-4" />}
-                          <span className="text-xs font-bold capitalize">{t}</span>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="shrink-0">
+                            {t === 'video' && <Video className="w-3.5 h-3.5" />}
+                            {t === 'audio' && <Music className="w-3.5 h-3.5" />}
+                            {t === 'subtitles' && <Subtitles className="w-3.5 h-3.5" />}
+                            {t === 'transcribe' && <Mic className="w-3.5 h-3.5" />}
+                          </div>
+                          <span className="text-[11px] font-bold truncate">
+                            {t === 'subtitles' ? 'Subtitles' : 
+                             t === 'transcribe' ? 'Whisper' : 
+                             t.charAt(0).toUpperCase() + t.slice(1)}
+                          </span>
                         </div>
-                        {type === t && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        {type === t && <div className="shrink-0 w-1 h-1 rounded-full bg-white ml-2" />}
                       </button>
                     ))}
                   </div>
