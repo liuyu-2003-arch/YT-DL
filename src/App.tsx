@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Youtube, 
@@ -56,7 +56,14 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const bookmarkletRef = useRef<HTMLAnchorElement>(null);
+  
+  const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('https://yt-dlp.324893.xyz/#?url='+url+'&type=subtitles&autocopy=true','_blank');})();`;
+
+  const bookmarkletRef = useCallback((node: HTMLAnchorElement | null) => {
+    if (node) {
+      node.setAttribute('href', bookmarkletCode);
+    }
+  }, [bookmarkletCode]);
 
   // Handle URL parameters on mount
   useEffect(() => {
@@ -203,14 +210,6 @@ export default function App() {
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
   };
-
-  const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('https://yt-dlp.324893.xyz/#?url='+url+'&type=subtitles&autocopy=true','_blank');})();`;
-
-  useEffect(() => {
-    if (bookmarkletRef.current) {
-      bookmarkletRef.current.setAttribute('href', bookmarkletCode);
-    }
-  }, [bookmarkletCode, showHelp]);
 
   return (
     <div className="min-h-screen bg-[#FBFBFA] text-[#1D1D1F] font-sans selection:bg-black/5 overflow-x-hidden">
