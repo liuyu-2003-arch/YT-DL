@@ -520,6 +520,32 @@ export default function App() {
                       <p className="text-[9px] opacity-40 italic mt-2">*仅在需要 AI 转录时使用。</p>
                     </div>
                   </section>
+
+                  {/* Bookmarklet Section */}
+                  <section className="space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 italic flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                      浏览器插件 (Bookmarklet)
+                    </h4>
+                    <div className="bg-[#E8E8ED] rounded-2xl p-5 space-y-4 border border-[#1D1D1F]/5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-blue-600/10 rounded-lg flex items-center justify-center">
+                          <Info className="w-3.5 h-3.5 text-blue-700" />
+                        </div>
+                        <h4 className="text-[11px] font-black uppercase tracking-wider text-[#1D1D1F]/70">一键提取工具</h4>
+                      </div>
+                      <p className="text-[11px] text-[#1D1D1F]/50 leading-relaxed font-medium">
+                        将下方按钮拖动到您的浏览器书签栏。在 YouTube 页面点击它，即可瞬间生成并复制下载命令。
+                      </p>
+                      <a 
+                        href={bookmarkletCode}
+                        onClick={(e) => e.preventDefault()}
+                        className="block w-full py-3 bg-white border border-blue-600/30 rounded-xl text-xs font-bold text-blue-700 text-center hover:bg-blue-50 transition-all shadow-md cursor-move active:scale-[0.98]"
+                      >
+                        YT-DLP Architect
+                      </a>
+                    </div>
+                  </section>
                 </div>
               </motion.div>
             )}
@@ -631,28 +657,6 @@ export default function App() {
                     Last 10 commands preserved
                   </p>
                 )}
-
-                {/* Bookmarklet Section */}
-                <div className="mt-auto pt-8 border-t border-[#1D1D1F]/10">
-                  <div className="bg-[#E8E8ED] rounded-2xl p-5 space-y-4 border border-[#1D1D1F]/5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-600/10 rounded-lg flex items-center justify-center">
-                        <Info className="w-3.5 h-3.5 text-blue-700" />
-                      </div>
-                      <h4 className="text-[11px] font-black uppercase tracking-wider text-[#1D1D1F]/70">Browser Plugin (Bookmarklet)</h4>
-                    </div>
-                    <p className="text-[11px] text-[#1D1D1F]/50 leading-relaxed font-medium">
-                      Drag the button below to your bookmarks bar. Click it while on a YouTube page to instantly generate and copy the command.
-                    </p>
-                    <a 
-                      href={bookmarkletCode}
-                      onClick={(e) => e.preventDefault()}
-                      className="block w-full py-3 bg-white border border-blue-600/30 rounded-xl text-xs font-bold text-blue-700 text-center hover:bg-blue-50 transition-all shadow-md cursor-move active:scale-[0.98]"
-                    >
-                      YT-DLP Architect
-                    </a>
-                  </div>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
