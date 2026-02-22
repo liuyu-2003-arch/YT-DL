@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Youtube, 
@@ -54,7 +54,6 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const bookmarkletRef = useRef<HTMLAnchorElement>(null);
 
   // Handle URL parameters on mount
   useEffect(() => {
@@ -203,12 +202,6 @@ export default function App() {
   };
 
   const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('https://yt-dlp.324893.xyz/#?url='+url+'&type=subtitles&autocopy=true','_blank');})();`;
-
-  useEffect(() => {
-    if (bookmarkletRef.current) {
-      bookmarkletRef.current.setAttribute('href', bookmarkletCode);
-    }
-  }, [bookmarkletCode, showHelp]);
 
   return (
     <div className="min-h-screen bg-[#FBFBFA] text-[#1D1D1F] font-sans selection:bg-black/5 overflow-x-hidden">
@@ -584,9 +577,14 @@ export default function App() {
                     将下方按钮拖动到您的浏览器书签栏。在 YouTube 页面点击它，即可瞬间生成并复制下载命令。
                   </p>
                   <a 
-                    ref={bookmarkletRef}
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
+                    href={bookmarkletCode}
+                    onClick={(e) => {
+                      if (e.currentTarget.href.startsWith('javascript:')) {
+                        // Allow dragging but prevent click execution if desired, 
+                        // though usually bookmarklets are meant to be dragged.
+                        // If they click it, we can show a hint.
+                      }
+                    }}
                     className="block w-full py-3 bg-black rounded-xl text-xs font-bold text-white text-center hover:bg-zinc-800 transition-all shadow-md cursor-move active:scale-[0.98]"
                   >
                     YT-DLP Architect
