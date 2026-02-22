@@ -149,12 +149,15 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh.*" --skip-download --ignore-errors`;
+        return `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --skip-download --ignore-errors --sleep-subtitles 2 --no-cache-dir && \\\n` +
+               `echo "📝 正在提取纯文本内容..." && \\\n` +
+               `for f in "${outputPath}/"*.{vtt,srt}; do [ -f "$f" ] && sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$f" > "\${f%.*}.txt"; done && \\\n` +
+               `echo "✅ 字幕与文本处理完成！"`;
       
       case 'transcribe':
         return `echo "🎙️ 正在启动 Whisper 语音识别转录..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt --output_dir \\"${outputPath}/\\"" && \\\n` +
-               `echo "✅ 转录完成！请在目录中查看 .srt 文件：${outputPath}"`;
+               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt,txt --output_dir \\"${outputPath}/\\"" && \\\n` +
+               `echo "✅ 转录完成！请在目录中查看 .srt 和 .txt 文件：${outputPath}"`;
       
       default:
         return '';
