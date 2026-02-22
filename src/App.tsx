@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Youtube, 
@@ -22,7 +22,9 @@ import {
   Trash2,
   Clock,
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  Home,
+  Globe
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -54,6 +56,7 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const bookmarkletRef = useRef<HTMLAnchorElement>(null);
 
   // Handle URL parameters on mount
   useEffect(() => {
@@ -203,6 +206,12 @@ export default function App() {
 
   const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('https://yt-dlp.324893.xyz/#?url='+url+'&type=subtitles&autocopy=true','_blank');})();`;
 
+  useEffect(() => {
+    if (bookmarkletRef.current) {
+      bookmarkletRef.current.setAttribute('href', bookmarkletCode);
+    }
+  }, [bookmarkletCode, showHelp]);
+
   return (
     <div className="min-h-screen bg-[#FBFBFA] text-[#1D1D1F] font-sans selection:bg-black/5 overflow-x-hidden">
       {/* Background Gradient - Artistic & Warm */}
@@ -228,7 +237,9 @@ export default function App() {
               </div>
             </div>
             <div>
-              <h1 className="text-4xl font-serif italic font-black tracking-tighter text-black leading-none">Architect.</h1>
+              <a href="https://yt-dlp.324893.xyz/" className="block group">
+                <h1 className="text-4xl font-serif italic font-black tracking-tighter text-black leading-none group-hover:opacity-70 transition-opacity">Architect.</h1>
+              </a>
               <p className="text-[10px] text-black/30 font-bold uppercase tracking-[0.3em] mt-1">YT-DLP Command Lab</p>
             </div>
           </div>
@@ -577,12 +588,14 @@ export default function App() {
                     将下方按钮拖动到您的浏览器书签栏。在 YouTube 页面点击它，即可瞬间生成并复制下载命令。
                   </p>
                   <a 
-                    href={bookmarkletCode}
+                    ref={bookmarkletRef}
+                    href="#"
                     onClick={(e) => {
-                      if (e.currentTarget.href.startsWith('javascript:')) {
-                        // Allow dragging but prevent click execution if desired, 
-                        // though usually bookmarklets are meant to be dragged.
-                        // If they click it, we can show a hint.
+                      if (e.currentTarget.getAttribute('href')?.startsWith('javascript:')) {
+                        // Allow dragging. If they click it, we can show a hint or do nothing.
+                        // Bookmarklets are primarily for dragging.
+                      } else {
+                        e.preventDefault();
                       }
                     }}
                     className="block w-full py-3 bg-black rounded-xl text-xs font-bold text-white text-center hover:bg-zinc-800 transition-all shadow-md cursor-move active:scale-[0.98]"
@@ -706,14 +719,21 @@ export default function App() {
 
       {/* Footer */}
       <footer className="relative z-10 py-12 text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-1 h-1 rounded-full bg-black/5" />
-          <div className="w-1 h-1 rounded-full bg-black/5" />
-          <div className="w-1 h-1 rounded-full bg-black/5" />
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+          <p className="text-[10px] text-black/10 font-mono tracking-[0.2em] uppercase">
+            Architectural Precision
+          </p>
+          <div className="hidden sm:block w-1 h-1 rounded-full bg-black/5" />
+          <a 
+            href="https://324893.xyz/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/10 hover:text-black transition-colors group"
+          >
+            <Globe className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+            <span>324893.xyz</span>
+          </a>
         </div>
-        <p className="text-[10px] text-black/10 font-mono tracking-[0.2em] uppercase">
-          Architectural Precision
-        </p>
       </footer>
     </div>
   );
