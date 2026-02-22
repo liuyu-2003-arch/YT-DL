@@ -20,7 +20,9 @@ import {
   Info,
   History,
   Trash2,
-  Clock
+  Clock,
+  HelpCircle,
+  ChevronRight
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -48,6 +50,7 @@ export default function App() {
   const [isPlaylist, setIsPlaylist] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
   // Handle URL parameters on mount
@@ -222,7 +225,26 @@ export default function App() {
             </button>
 
             <button 
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={() => {
+                setShowHelp(!showHelp);
+                setShowHistory(false);
+              }}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 text-xs font-bold",
+                showHelp 
+                  ? "bg-emerald-700 border-emerald-700 text-white shadow-lg shadow-emerald-700/30" 
+                  : "bg-white/80 backdrop-blur-md border-[#1D1D1F]/15 text-[#1D1D1F]/70 hover:border-[#1D1D1F]/30 hover:bg-white shadow-sm"
+              )}
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Help</span>
+            </button>
+
+            <button 
+              onClick={() => {
+                setShowHistory(!showHistory);
+                setShowHelp(false);
+              }}
               className={cn(
                 "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 text-xs font-bold",
                 showHistory 
@@ -399,6 +421,109 @@ export default function App() {
               </div>
             </div>
           </motion.div>
+
+          {/* Help Overlay Panel */}
+          <AnimatePresence>
+            {showHelp && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="absolute inset-0 z-20 bg-white border border-[#1D1D1F]/15 rounded-[2.5rem] p-8 shadow-2xl shadow-[#1D1D1F]/20 flex flex-col overflow-y-auto custom-scrollbar"
+              >
+                <div className="flex items-center justify-between mb-8 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center">
+                      <HelpCircle className="w-5 h-5 text-emerald-700" />
+                    </div>
+                    <h3 className="text-base font-black uppercase tracking-wider text-[#1D1D1F]/80 italic">使用帮助</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowHelp(false)}
+                    className="p-2 hover:bg-[#E8E8ED] text-[#1D1D1F]/40 hover:text-[#1D1D1F] rounded-xl transition-colors"
+                  >
+                    <Check className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-8 pb-8">
+                  <section className="space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 italic flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                      快速开始
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {[
+                        { step: "1", text: "将 YouTube 或 Bilibili 链接粘贴到输入框中。" },
+                        { step: "2", text: "选择您需要的下载类型（视频、音频或字幕）。" },
+                        { step: "3", text: "点击“复制命令”并将其粘贴到您的终端中运行。" }
+                      ].map((item) => (
+                        <div key={item.step} className="flex items-start gap-4 p-4 bg-[#E8E8ED]/50 rounded-2xl border border-[#1D1D1F]/5">
+                          <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[10px] font-black text-blue-600 shadow-sm shrink-0">{item.step}</span>
+                          <p className="text-xs font-medium text-[#1D1D1F]/70 leading-relaxed">{item.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 italic flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600" />
+                      下载模式
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Video className="w-3.5 h-3.5 text-blue-500" />
+                          <span className="text-[10px] font-black uppercase tracking-wider">视频模式</span>
+                        </div>
+                        <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">下载最高画质的视频 (mkv)，并嵌入字幕和元数据。</p>
+                      </div>
+                      <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Music className="w-3.5 h-3.5 text-purple-500" />
+                          <span className="text-[10px] font-black uppercase tracking-wider">音频模式</span>
+                        </div>
+                        <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">提取高质量 MP3 音频，并嵌入封面和元数据。</p>
+                      </div>
+                      <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Subtitles className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-[10px] font-black uppercase tracking-wider">智能字幕</span>
+                        </div>
+                        <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">优先尝试下载原生字幕。如果未检测到，则会自动下载音频并使用 <b>OpenAI Whisper</b> 进行 AI 转录。</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 italic flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                      环境要求
+                    </h4>
+                    <div className="p-5 bg-[#1D1D1F] rounded-3xl text-white/90 space-y-3 shadow-xl">
+                      <p className="text-[10px] font-medium opacity-60 uppercase tracking-widest">请确保已安装以下工具：</p>
+                      <div className="space-y-2 font-mono text-[10px]">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                          <span>yt-dlp</span>
+                          <span className="text-emerald-400">必须</span>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                          <span>ffmpeg</span>
+                          <span className="text-emerald-400">必须</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>openai-whisper</span>
+                          <span className="text-blue-400">可选*</span>
+                        </div>
+                      </div>
+                      <p className="text-[9px] opacity-40 italic mt-2">*仅在需要 AI 转录时使用。</p>
+                    </div>
+                  </section>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* History Overlay Panel */}
           <AnimatePresence>
