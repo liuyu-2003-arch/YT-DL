@@ -53,8 +53,8 @@ export default function App() {
   // Handle URL parameters on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const urlParam = params.get('url');
-    const typeParam = params.get('type') as DownloadType;
+    const urlParam = params.get('u') || params.get('url');
+    const typeParam = (params.get('t') || params.get('type')) as DownloadType;
 
     if (urlParam) setUrl(decodeURIComponent(urlParam));
     if (typeParam && ['video', 'audio', 'subtitles'].includes(typeParam)) setType(typeParam);
@@ -106,9 +106,16 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `# 下载字幕 (如果无字幕则使用 Whisper 转录)\n` +
-               `yt-dlp ${playlistFlag} --write-subs --write-auto-subs --sub-langs "zh.*,en.*" --skip-download --convert-subs srt ${baseOutput} "${url}" || \\\n` +
-               `(yt-dlp ${playlistFlag} -x --audio-format wav -o "temp_audio.wav" "${url}" && whisper temp_audio.wav --model medium --output_format srt --output_dir "${outputPath}" && rm temp_audio.wav)`;
+        return `# 智能字幕获取: 优先下载原生/自动翻译字幕，若无则使用 Whisper 转录\n` +
+               `if yt-dlp --list-subs "${url}" | grep -qE "(zh|en|Chinese|English)"; then \\\n` +
+               `  yt-dlp ${playlistFlag} --write-subs --write-auto-subs --sub-langs "zh.*,en.*" --skip-download --convert-subs srt ${baseOutput} "${url}"; \\\n` +
+               `else \\\n` +
+               `  echo "未检测到中英字幕，启动 Whisper 转录..." && \\\n` +
+               `  yt-dlp ${playlistFlag} -x --audio-format wav -o "temp_audio.wav" "${url}" && \\\n` +
+               `  whisper temp_audio.wav --model medium --output_format srt --output_dir "${outputPath}" && \\\n` +
+               `  mv "${outputPath}/temp_audio.srt" "${outputPath}/$(yt-dlp --get-filename -o "%(title)s" "${url}").whisper.srt" && \\\n` +
+               `  rm temp_audio.wav; \\\n` +
+               `fi`;
       
       default:
         return '';
@@ -137,7 +144,7 @@ export default function App() {
   // Auto-copy effect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const autoCopy = params.get('autocopy') === 'true';
+    const autoCopy = params.get('a') === '1' || params.get('autocopy') === 'true';
     
     if (autoCopy && generatedCommand && isValid) {
       handleCopy();
@@ -157,9 +164,9 @@ export default function App() {
   const handleShare = () => {
     const baseUrl = window.location.origin + window.location.pathname;
     const params = new URLSearchParams();
-    if (url) params.set('url', encodeURIComponent(url));
-    params.set('type', type);
-    params.set('autocopy', 'true');
+    if (url) params.set('u', encodeURIComponent(url));
+    if (type !== 'subtitles') params.set('t', type); // Only set if not default
+    params.set('a', '1');
     
     const shareUrl = `${baseUrl}?${params.toString()}`;
     navigator.clipboard.writeText(shareUrl);
@@ -186,12 +193,17 @@ export default function App() {
           className="flex items-center justify-between mb-12"
         >
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-white border border-[#1D1D1F]/10 rounded-xl flex items-center justify-center shadow-sm">
-              <Terminal className="w-5 h-5 text-blue-600" />
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 transform -rotate-6 group hover:rotate-0 transition-transform duration-500">
+                <Terminal className="w-6 h-6 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white border-2 border-[#F5F5F7] rounded-full flex items-center justify-center shadow-sm">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-[#1D1D1F]">YT-DLP Architect</h1>
-              <p className="text-xs text-[#1D1D1F]/40 font-medium">Precision Command Generator</p>
+              <h1 className="text-2xl font-black tracking-tighter text-[#1D1D1F] italic">ARCHITECT.</h1>
+              <p className="text-[10px] text-[#1D1D1F]/40 font-bold uppercase tracking-[0.2em]">YT-DLP Command Lab</p>
             </div>
           </div>
           
