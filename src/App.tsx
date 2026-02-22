@@ -138,7 +138,7 @@ export default function App() {
   const generatedCommand = useMemo(() => {
     if (!isValid || !url) return '';
 
-    const baseOutput = `-o "${outputPath}/%(title)s.%(ext)s"`;
+    const baseOutput = `-o "${outputPath}/%(title)s/%(title)s.%(ext)s"`;
     const playlistFlag = isPlaylist ? '--yes-playlist' : '--no-playlist';
     
     switch (type) {
@@ -149,27 +149,31 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --skip-download --ignore-errors --sleep-subtitles 2 --no-cache-dir && \\\n` +
-               `echo "🏷️ 正在重命名并提取文本内容..." && \\\n` +
-               `for f in "${outputPath}/"* ; do \\\n` +
-               `  case "$f" in \\\n` +
-               `    *.vtt|*.srt) \\\n` +
-               `      new_name="$f"; \\\n` +
-               `      if [[ "$f" == *".en-orig."* ]] || [[ "$f" == *".zh-orig."* ]]; then new_name="\${f%.*}.[原始字幕].\${f##*.}"; \\\n` +
-               `      elif [[ "$f" == *"-en."* ]] || [[ "$f" == *"-zh-"* ]]; then new_name="\${f%.*}.[自动翻译].\${f##*.}"; \\\n` +
-               `      else new_name="\${f%.*}.[自动生成].\${f##*.}"; fi; \\\n` +
-               `      [ "$f" != "$new_name" ] && mv "$f" "$new_name"; \\\n` +
-               `      sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" > "\${new_name%.*}.txt" ;; \\\n` +
-               `  esac; \\\n` +
+        return `yt-dlp ${playlistFlag} "${url}" -o "${outputPath}/%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --skip-download --ignore-errors --sleep-subtitles 5 --no-cache-dir && \\\n` +
+               `echo "🏷️ 正在重命名并提取文本内容 (自动去重)..." && \\\n` +
+               `for f in "${outputPath}/"*/*.srt ; do \\\n` +
+               `  [ -f "$f" ] || continue; \\\n` +
+               `  [[ "$f" == *"[原始字幕]"* ]] || [[ "$f" == *"[自动翻译]"* ]] || [[ "$f" == *"[自动生成]"* ]] && continue; \\\n` +
+               `  new_name="$f"; \\\n` +
+               `  if [[ "$f" == *".orig."* ]]; then label="原始字幕"; \\\n` +
+               `  elif [[ "$f" == *"-en."* ]] || [[ "$f" == *"-zh-"* ]] || [[ "$f" == *".zh-Hans."* ]] || [[ "$f" == *".zh-Hant."* ]]; then label="自动翻译"; \\\n` +
+               `  else label="自动生成"; fi; \\\n` +
+               `  new_name="\${f%.*}.[\$label].srt"; \\\n` +
+               `  [ "$f" != "$new_name" ] && [ ! -f "$new_name" ] && mv "$f" "$new_name"; \\\n` +
+               `  sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" | uniq > "\${new_name%.*}.txt" ;; \\\n` +
                `done && \\\n` +
                `echo "✅ 字幕重命名与文本提取完成！"`;
       
       case 'transcribe':
         return `echo "🎙️ 正在启动 Whisper 语音识别转录..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt,txt --output_dir \\"${outputPath}/\\"" && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -o "${outputPath}/%(title)s/%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt,txt --output_dir \\"$(dirname {})\\"" && \\\n` +
                `echo "🏷️ 正在优化转录文件名..." && \\\n` +
-               `for f in "${outputPath}/"* ; do case "$f" in *.srt|*.txt) if [[ "$f" != *"[Whisper转录]"* ]]; then mv "$f" "\${f%.*}.[Whisper转录].\${f##*.}"; fi ;; esac; done && \\\n` +
-               `echo "✅ 转录完成！请在目录中查看带 [Whisper转录] 标识的文件：${outputPath}"`;
+               `for f in "${outputPath}/"*/*.{srt,txt} ; do \\\n` +
+               `  [ -f "$f" ] || continue; \\\n` +
+               `  [[ "$f" == *"[Whisper转录]"* ]] && continue; \\\n` +
+               `  mv "$f" "\${f%.*}.[Whisper转录].\${f##*.}"; \\\n` +
+               `done && \\\n` +
+               `echo "✅ 转录完成！请在视频对应目录中查看带 [Whisper转录] 标识的文件"`;
       
       default:
         return '';
