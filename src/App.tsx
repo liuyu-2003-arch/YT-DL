@@ -48,7 +48,7 @@ interface HistoryItem {
 export default function App() {
   const [url, setUrl] = useState('');
   const [type, setType] = useState<DownloadType>('subtitles');
-  const [outputPath, setOutputPath] = useState('~/Videos/YouTube DL');
+  const [outputPath, setOutputPath] = useState('/Users/yuliu/Movies/YouTube DL');
   const [copied, setCopied] = useState(false);
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [title, setTitle] = useState('');
@@ -149,9 +149,7 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `echo "🔍 正在尝试下载现有字幕..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh.*" --convert-subs srt --skip-download -k --no-cache-dir && \\\n` +
-               `echo "✅ 字幕下载完成！请在目录中查看 .srt 或 .vtt 文件：${outputPath}"`;
+        return `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh.*" --skip-download --ignore-errors`;
       
       case 'transcribe':
         return `echo "🎙️ 正在启动 Whisper 语音识别转录..." && \\\n` +
@@ -405,8 +403,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="px-1">
-                      <p className="text-xs font-semibold truncate text-black/70 mb-1 group-hover/preview:text-black transition-colors">{title || url}</p>
-                      <p className="text-[10px] text-black/20 font-medium">Click to open original video</p>
+                      <p className="text-xs font-semibold truncate text-black/70 group-hover/preview:text-black transition-colors">{title || url}</p>
                     </div>
                   </motion.a>
                 ) : (
