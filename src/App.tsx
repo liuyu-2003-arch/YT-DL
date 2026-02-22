@@ -139,7 +139,7 @@ export default function App() {
       timestamp: Date.now(),
     };
     
-    setHistory(prev => [newItem, ...prev.filter(item => item.url !== url || item.type !== type)].slice(0, 10));
+    setHistory(prev => [newItem, ...prev.filter(item => item.url !== url)].slice(0, 10));
     
     setTimeout(() => setCopied(false), 2000);
   };
@@ -277,9 +277,9 @@ export default function App() {
           {/* Main Content Area */}
           <motion.div 
             animate={{ 
-              opacity: showHistory ? 0.3 : 1,
-              scale: showHistory ? 0.98 : 1,
-              filter: showHistory ? 'blur(4px)' : 'blur(0px)'
+              opacity: (showHistory || showHelp) ? 0.3 : 1,
+              scale: (showHistory || showHelp) ? 0.98 : 1,
+              filter: (showHistory || showHelp) ? 'blur(4px)' : 'blur(0px)'
             }}
             className="space-y-8 transition-all duration-500"
           >
@@ -310,23 +310,34 @@ export default function App() {
               {/* Preview Card */}
               <AnimatePresence mode="wait">
                 {isValid && url ? (
-                  <motion.div 
+                  <motion.a 
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white border border-[#1D1D1F]/10 rounded-3xl p-4 shadow-xl shadow-[#1D1D1F]/5 flex flex-col gap-4"
+                    className="bg-white border border-[#1D1D1F]/10 rounded-3xl p-4 shadow-xl shadow-[#1D1D1F]/5 flex flex-col gap-4 hover:border-blue-500/30 transition-all group/preview active:scale-[0.98]"
                   >
                     <div className="aspect-video bg-[#E8E8ED] rounded-2xl flex items-center justify-center overflow-hidden relative border border-[#1D1D1F]/5">
                       {url.includes('youtube.com') || url.includes('youtu.be') ? (
                         <img 
                           src={`https://img.youtube.com/vi/${url.split('v=')[1]?.split('&')[0] || url.split('/').pop()}/mqdefault.jpg`} 
                           alt="Thumbnail"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover/preview:scale-105 transition-transform duration-500"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
                         <Youtube className="w-10 h-10 text-[#1D1D1F]/10" />
                       )}
+                      
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover/preview:bg-black/10 transition-colors flex items-center justify-center">
+                        <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transform translate-y-2 group-hover/preview:translate-y-0 transition-all duration-300 shadow-lg">
+                          <ExternalLink className="w-5 h-5 text-blue-600" />
+                        </div>
+                      </div>
+
                       <div className="absolute top-3 left-3">
                         {isPlaylist ? (
                           <span className="px-2 py-1 bg-purple-500 text-white text-[9px] font-bold uppercase rounded-full shadow-lg shadow-purple-500/20">Playlist</span>
@@ -336,10 +347,10 @@ export default function App() {
                       </div>
                     </div>
                     <div className="px-1">
-                      <p className="text-xs font-semibold truncate text-[#1D1D1F]/80 mb-1">{url}</p>
-                      <p className="text-[10px] text-[#1D1D1F]/40 font-medium">Ready for architecting...</p>
+                      <p className="text-xs font-semibold truncate text-[#1D1D1F]/80 mb-1 group-hover/preview:text-blue-600 transition-colors">{url}</p>
+                      <p className="text-[10px] text-[#1D1D1F]/40 font-medium">Click to open original video</p>
                     </div>
-                  </motion.div>
+                  </motion.a>
                 ) : (
                   <div className="bg-white/40 border border-dashed border-[#1D1D1F]/10 rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center">
@@ -436,7 +447,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="absolute inset-0 z-20 bg-white border border-[#1D1D1F]/15 rounded-[2.5rem] p-8 shadow-2xl shadow-[#1D1D1F]/20 flex flex-col overflow-y-auto custom-scrollbar"
+                className="absolute inset-0 z-20 bg-white border border-[#1D1D1F]/15 rounded-[2.5rem] p-8 shadow-2xl shadow-[#1D1D1F]/20 flex flex-col overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-8 shrink-0">
                   <div className="flex items-center gap-3">
@@ -453,7 +464,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="space-y-8 pb-8">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8 pb-8">
                   <section className="space-y-4">
                     <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 italic flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
