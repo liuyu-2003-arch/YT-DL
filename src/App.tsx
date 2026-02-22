@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Youtube, 
@@ -52,6 +52,7 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const bookmarkletRef = useRef<HTMLAnchorElement>(null);
 
   // Handle URL parameters on mount
   useEffect(() => {
@@ -177,6 +178,12 @@ export default function App() {
   };
 
   const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('${window.location.origin}${window.location.pathname}?url='+url+'&type=video&autocopy=true','_blank');})();`;
+
+  useEffect(() => {
+    if (bookmarkletRef.current) {
+      bookmarkletRef.current.setAttribute('href', bookmarkletCode);
+    }
+  }, [bookmarkletCode, showHelp]);
 
   return (
     <div className="min-h-screen bg-[#E8E8ED] text-[#1D1D1F] font-sans selection:bg-blue-500/30 overflow-x-hidden">
@@ -538,7 +545,8 @@ export default function App() {
                         将下方按钮拖动到您的浏览器书签栏。在 YouTube 页面点击它，即可瞬间生成并复制下载命令。
                       </p>
                       <a 
-                        href={bookmarkletCode}
+                        ref={bookmarkletRef}
+                        href="#"
                         onClick={(e) => e.preventDefault()}
                         className="block w-full py-3 bg-white border border-blue-600/30 rounded-xl text-xs font-bold text-blue-700 text-center hover:bg-blue-50 transition-all shadow-md cursor-move active:scale-[0.98]"
                       >
