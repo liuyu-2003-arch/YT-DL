@@ -148,21 +148,11 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        const tmpId = Math.random().toString(36).substring(2, 8);
-        const tmpBase = `whisper_tmp_${tmpId}`;
-        return `# Attempt to download existing subtitles, fallback to Whisper on failure (e.g. 429 error)\n` +
-               `if yt-dlp ${playlistFlag} --write-subs --write-auto-subs --sub-langs "zh.*,en.*" --skip-download --convert-subs srt ${baseOutput} --no-cache-dir "${url}"; then\n` +
-               `  echo "✅ Subtitles downloaded successfully."\n` +
-               `else\n` +
-               `  echo "⚠️ Subtitle download failed or unavailable. Falling back to Whisper transcription..."\n` +
-               `  yt-dlp ${playlistFlag} -x --audio-format wav --no-cache-dir -o "${tmpBase}.wav" "${url}"\n` +
-               `  whisper "${tmpBase}.wav" --model medium --output_format srt --output_dir "${outputPath}"\n` +
-               `  for f in "${outputPath}/${tmpBase}"*.srt; do\n` +
-               `    mv "$f" "${outputPath}/$(yt-dlp --get-filename -o "%(title)s" "${url}").whisper.srt"\n` +
-               `    break\n` +
-               `  done\n` +
-               `  rm "${tmpBase}.wav" && echo "✅ Whisper transcription complete."\n` +
-               `fi`;
+        return `echo "🔍 Checking for existing subtitles..." && \\\n` +
+               `(yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh.*" --convert-subs srt --skip-download --no-cache-dir 2>&1 | tee /dev/stderr | grep -qE "There are no subtitles|HTTP Error 429") && \\\n` +
+               `echo "⚠️ Subtitles unavailable. Starting Whisper transcription..." && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-write-subs --no-cache-dir --exec "whisper {} --model medium --output_format srt --output_dir \\"${outputPath}/\\"" || \\\n` +
+               `echo "✅ Subtitles processed."`;
       
       default:
         return '';
