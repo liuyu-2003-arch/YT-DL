@@ -151,7 +151,7 @@ export default function App() {
       case 'subtitles':
         return `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --skip-download --ignore-errors --sleep-subtitles 2 --no-cache-dir && \\\n` +
                `echo "📝 正在提取纯文本内容..." && \\\n` +
-               `for f in "${outputPath}/"*.{vtt,srt}; do [ -f "$f" ] && sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$f" > "\${f%.*}.txt"; done && \\\n` +
+               `for f in "${outputPath}/"* ; do case "$f" in *.vtt|*.srt) sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$f" > "\${f%.*}.txt" ;; esac; done && \\\n` +
                `echo "✅ 字幕与文本处理完成！"`;
       
       case 'transcribe':
