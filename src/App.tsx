@@ -148,11 +148,11 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `(echo "🔍 正在检查现有字幕..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-sub --sub-langs "en.*,zh.*" --convert-subs srt --skip-download 2>&1 | tee /dev/stderr | grep -qE "There are no subtitles|HTTP Error 429") && \\\n` +
-               `echo "⚠️ 未找到字幕或请求受限，正在启动 Whisper 语音转文字..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-write-subs --exec "whisper {} --model medium --output_format srt --output_dir \\"${outputPath}/\\"" || \\\n` +
-               `echo "✅ 字幕处理完成。"`;
+        return `(echo "🔍 正在尝试下载现有字幕..." && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh.*" --convert-subs srt --skip-download -k --no-cache-dir 2>&1 | tee /dev/stderr | grep -qE "There are no subtitles|HTTP Error 429") && \\\n` +
+               `echo "⚠️ 无法获取在线字幕，正在通过 Whisper 语音识别生成..." && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt --output_dir \\"${outputPath}/\\"" || \\\n` +
+               `echo "✅ 处理完成！请在目录中查看 .srt 或 .vtt 文件：${outputPath}"`;
       
       default:
         return '';
