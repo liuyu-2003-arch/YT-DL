@@ -1,0 +1,5 @@
+{
+  "name": "YT-DLP Command Architect",
+  "description": "A beautiful, artistic tool to generate precise yt-dlp commands for high-quality video, audio, and subtitle downloads with intelligent fallbacks.",
+  "requestFramePermissions": []
+}
