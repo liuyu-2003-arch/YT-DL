@@ -22,7 +22,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-[#1D1D1F]/10 rounded-full hover:bg-[#1D1D1F]/20 transition-colors;
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
