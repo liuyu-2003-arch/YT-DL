@@ -106,14 +106,13 @@ export default function App() {
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `# 智能字幕获取: 优先下载原生/自动翻译字幕，若无则使用 Whisper 转录\n` +
-               `if yt-dlp --list-subs "${url}" | grep -qE "(zh|en|Chinese|English)"; then \\\n` +
+        return `if yt-dlp --list-subs "${url}" | grep -iE "\\b(zh|en|chinese|english)\\b" > /dev/null 2>&1; then \\\n` +
                `  yt-dlp ${playlistFlag} --write-subs --write-auto-subs --sub-langs "zh.*,en.*" --skip-download --convert-subs srt ${baseOutput} "${url}"; \\\n` +
                `else \\\n` +
-               `  echo "未检测到中英字幕，启动 Whisper 转录..." && \\\n` +
+               `  echo "No subtitles found, starting Whisper transcription..." && \\\n` +
                `  yt-dlp ${playlistFlag} -x --audio-format wav -o "temp_audio.wav" "${url}" && \\\n` +
                `  whisper temp_audio.wav --model medium --output_format srt --output_dir "${outputPath}" && \\\n` +
-               `  mv "${outputPath}/temp_audio.srt" "${outputPath}/$(yt-dlp --get-filename -o "%(title)s" "${url}").whisper.srt" && \\\n` +
+               `  (for f in "${outputPath}/temp_audio"*.srt; do mv "$f" "${outputPath}/$(yt-dlp --get-filename -o "%(title)s" "${url}").whisper.srt"; break; done) && \\\n` +
                `  rm temp_audio.wav; \\\n` +
                `fi`;
       
