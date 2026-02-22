@@ -102,21 +102,33 @@ export default function App() {
   useEffect(() => {
     if (!url) {
       setIsValid(null);
+      setTitle('');
       return;
     }
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
     const bilibiliRegex = /^(https?:\/\/)?(www\.)?bilibili\.com\/video\/.+$/;
     const playlistRegex = /[&?]list=([^&]+)/;
 
-    const valid = youtubeRegex.test(url) || bilibiliRegex.test(url);
+    const isYoutube = youtubeRegex.test(url);
+    const isBilibili = bilibiliRegex.test(url);
+    const valid = isYoutube || isBilibili;
+    
     setIsValid(valid);
     setIsPlaylist(playlistRegex.test(url));
 
-    if (valid && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+    if (valid && isYoutube) {
       fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`)
         .then(res => res.json())
         .then(data => setTitle(data.title))
         .catch(() => setTitle(''));
+    } else if (valid && isBilibili) {
+      // For Bilibili, we try to extract BVID for display if title fetch fails
+      const bvidMatch = url.match(/\/video\/(BV[a-zA-Z0-9]+)/);
+      if (bvidMatch) {
+        setTitle(`Bilibili: ${bvidMatch[1]}`);
+      } else {
+        setTitle('Bilibili Video');
+      }
     } else {
       setTitle('');
     }
@@ -355,13 +367,26 @@ export default function App() {
                     <div className="aspect-video bg-[#F5F5F7] rounded-2xl flex items-center justify-center overflow-hidden relative border border-[#1D1D1F]/5">
                       {url.includes('youtube.com') || url.includes('youtu.be') ? (
                         <img 
-                          src={`https://img.youtube.com/vi/${url.split('v=')[1]?.split('&')[0] || url.split('/').pop()}/mqdefault.jpg`} 
+                          src={`https://img.youtube.com/vi/${
+                            url.includes('v=') 
+                              ? url.split('v=')[1]?.split('&')[0] 
+                              : url.split('/').pop()?.split('?')[0]
+                          }/mqdefault.jpg`} 
                           alt="Thumbnail"
                           className="w-full h-full object-cover group-hover/preview:scale-105 transition-transform duration-500 opacity-90 group-hover/preview:opacity-100"
                           referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="flex flex-col items-center gap-2 opacity-20"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-youtube"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 2-2 68.4 68.4 0 0 1 15 0 2 2 0 0 1 2 2 24.12 24.12 0 0 1 0 10 2 2 0 0 1-2 2 68.4 68.4 0 0 1-15 0 2 2 0 0 1-2-2Z"/><path d="m10 15 5-3-5-3z"/></svg></div>';
+                          }}
                         />
+                      ) : url.includes('bilibili.com') ? (
+                        <div className="flex flex-col items-center gap-3 opacity-20">
+                          <Video className="w-12 h-12 text-black" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Bilibili</span>
+                        </div>
                       ) : (
-                        <Youtube className="w-10 h-10 text-black/5" />
+                        <Video className="w-10 h-10 text-black/5" />
                       )}
                       
                       {/* Hover Overlay */}
