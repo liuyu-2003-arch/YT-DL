@@ -36,6 +36,7 @@ type DownloadType = 'video' | 'audio' | 'subtitles';
 interface HistoryItem {
   id: string;
   url: string;
+  title?: string;
   type: DownloadType;
   command: string;
   timestamp: number;
@@ -47,6 +48,7 @@ export default function App() {
   const [outputPath, setOutputPath] = useState('~/Videos/YouTube DL');
   const [copied, setCopied] = useState(false);
   const [isValid, setIsValid] = useState<boolean | null>(null);
+  const [title, setTitle] = useState('');
   const [isPlaylist, setIsPlaylist] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -94,6 +96,15 @@ export default function App() {
     const valid = youtubeRegex.test(url) || bilibiliRegex.test(url);
     setIsValid(valid);
     setIsPlaylist(playlistRegex.test(url));
+
+    if (valid && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+      fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`)
+        .then(res => res.json())
+        .then(data => setTitle(data.title))
+        .catch(() => setTitle(''));
+    } else {
+      setTitle('');
+    }
   }, [url]);
 
   const generatedCommand = useMemo(() => {
@@ -127,21 +138,23 @@ export default function App() {
 
   const handleCopy = () => {
     if (!generatedCommand) return;
+    
+    // Copy immediately for better UX
     navigator.clipboard.writeText(generatedCommand);
     setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
     
     // Add to history
     const newItem: HistoryItem = {
       id: Math.random().toString(36).substr(2, 9),
       url,
+      title: title || url,
       type,
       command: generatedCommand,
       timestamp: Date.now(),
     };
     
     setHistory(prev => [newItem, ...prev.filter(item => item.url !== url)].slice(0, 10));
-    
-    setTimeout(() => setCopied(false), 2000);
   };
 
   // Auto-copy effect
@@ -177,7 +190,7 @@ export default function App() {
     setTimeout(() => setShareCopied(false), 2000);
   };
 
-  const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('${window.location.origin}${window.location.pathname}?url='+url+'&type=video&autocopy=true','_blank');})();`;
+  const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('${window.location.origin}${window.location.pathname}?url='+url+'&type=subtitles&autocopy=true','_blank');})();`;
 
   useEffect(() => {
     if (bookmarkletRef.current) {
@@ -352,7 +365,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="px-1">
-                      <p className="text-xs font-semibold truncate text-white/80 mb-1 group-hover/preview:text-white transition-colors">{url}</p>
+                      <p className="text-xs font-semibold truncate text-white/80 mb-1 group-hover/preview:text-white transition-colors">{title || url}</p>
                       <p className="text-[10px] text-white/30 font-medium">Click to open original video</p>
                     </div>
                   </motion.a>
@@ -651,7 +664,7 @@ export default function App() {
                           </div>
                           <span className="text-[8px] text-white/20 font-mono">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
-                        <p className="text-[10px] font-medium truncate text-white/60 pr-6">{item.url}</p>
+                        <p className="text-[10px] font-medium truncate text-white/60 pr-6">{item.title || item.url}</p>
                       </div>
                       <div className="absolute top-1/2 -translate-y-1/2 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
