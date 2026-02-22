@@ -217,19 +217,25 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button 
-              onClick={handleShare}
-              disabled={!url || !isValid}
-              className={cn(
-                "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 text-xs font-bold",
-                shareCopied 
-                  ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-600/30" 
-                  : "bg-white/80 backdrop-blur-md border-[#1D1D1F]/15 text-[#1D1D1F]/70 hover:border-[#1D1D1F]/30 hover:bg-white shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+            <AnimatePresence>
+              {url && isValid && (
+                <motion.button 
+                  initial={{ opacity: 0, scale: 0.8, x: 10 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, x: 10 }}
+                  onClick={handleShare}
+                  className={cn(
+                    "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 text-xs font-bold",
+                    shareCopied 
+                      ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-600/30" 
+                      : "bg-white/80 backdrop-blur-md border-[#1D1D1F]/15 text-[#1D1D1F]/70 hover:border-[#1D1D1F]/30 hover:bg-white shadow-sm"
+                  )}
+                >
+                  {shareCopied ? <Check className="w-3.5 h-3.5" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                  <span>{shareCopied ? 'Link Copied' : 'Share'}</span>
+                </motion.button>
               )}
-            >
-              {shareCopied ? <Check className="w-3.5 h-3.5" /> : <ExternalLink className="w-3.5 h-3.5" />}
-              <span>{shareCopied ? 'Link Copied' : 'Share'}</span>
-            </button>
+            </AnimatePresence>
 
             <button 
               onClick={() => {
@@ -273,16 +279,16 @@ export default function App() {
           </div>
         </motion.div>
 
-        <div className="relative">
-          {/* Main Content Area */}
-          <motion.div 
-            animate={{ 
-              opacity: (showHistory || showHelp) ? 0.3 : 1,
-              scale: (showHistory || showHelp) ? 0.98 : 1,
-              filter: (showHistory || showHelp) ? 'blur(4px)' : 'blur(0px)'
-            }}
-            className="space-y-8 transition-all duration-500"
-          >
+        <div className="bg-white/60 backdrop-blur-3xl border border-white/40 rounded-[3rem] p-12 shadow-2xl relative">
+          <AnimatePresence mode="wait">
+            {!showHelp && !showHistory ? (
+              <motion.div 
+                key="main"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
             {/* Input Section */}
             <div className="space-y-3">
               <div className="relative group">
@@ -439,247 +445,241 @@ export default function App() {
               </div>
             </div>
           </motion.div>
-
-          {/* Help Overlay Panel */}
-          <AnimatePresence>
-            {showHelp && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="absolute inset-0 z-20 bg-white border border-[#1D1D1F]/15 rounded-[2.5rem] p-8 shadow-2xl shadow-[#1D1D1F]/20 flex flex-col overflow-hidden"
-              >
-                <div className="flex items-center justify-between mb-8 shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center">
-                      <HelpCircle className="w-5 h-5 text-emerald-700" />
-                    </div>
-                    <h3 className="text-base font-black uppercase tracking-wider text-[#1D1D1F]/80 italic">使用帮助</h3>
-                  </div>
-                  <button 
-                    onClick={() => setShowHelp(false)}
-                    className="p-2 hover:bg-[#E8E8ED] text-[#1D1D1F]/40 hover:text-[#1D1D1F] rounded-xl transition-colors"
-                  >
-                    <Check className="w-5 h-5" />
-                  </button>
+        ) : showHelp ? (
+          <motion.div 
+            key="help"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="relative z-20 flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-8 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-600/10 rounded-xl flex items-center justify-center">
+                  <HelpCircle className="w-5 h-5 text-emerald-700" />
                 </div>
-
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8 pb-8">
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 italic flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                      快速开始
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      {[
-                        { step: "1", text: "将 YouTube 或 Bilibili 链接粘贴到输入框中。" },
-                        { step: "2", text: "选择您需要的下载类型（视频、音频或字幕）。" },
-                        { step: "3", text: "点击“复制命令”并将其粘贴到您的终端中运行。" }
-                      ].map((item) => (
-                        <div key={item.step} className="flex items-start gap-4 p-4 bg-[#E8E8ED]/50 rounded-2xl border border-[#1D1D1F]/5">
-                          <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[10px] font-black text-blue-600 shadow-sm shrink-0">{item.step}</span>
-                          <p className="text-xs font-medium text-[#1D1D1F]/70 leading-relaxed">{item.text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 italic flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600" />
-                      下载模式
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Video className="w-3.5 h-3.5 text-blue-500" />
-                          <span className="text-[10px] font-black uppercase tracking-wider">视频模式</span>
-                        </div>
-                        <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">下载最高画质的视频 (mkv)，并嵌入字幕和元数据。</p>
-                      </div>
-                      <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Music className="w-3.5 h-3.5 text-purple-500" />
-                          <span className="text-[10px] font-black uppercase tracking-wider">音频模式</span>
-                        </div>
-                        <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">提取高质量 MP3 音频，并嵌入封面和元数据。</p>
-                      </div>
-                      <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Subtitles className="w-3.5 h-3.5 text-emerald-500" />
-                          <span className="text-[10px] font-black uppercase tracking-wider">智能字幕</span>
-                        </div>
-                        <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">优先尝试下载原生字幕。如果未检测到，则会自动下载音频并使用 <b>OpenAI Whisper</b> 进行 AI 转录。</p>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 italic flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                      环境要求
-                    </h4>
-                    <div className="p-5 bg-[#1D1D1F] rounded-3xl text-white/90 space-y-3 shadow-xl">
-                      <p className="text-[10px] font-medium opacity-60 uppercase tracking-widest">请确保已安装以下工具：</p>
-                      <div className="space-y-2 font-mono text-[10px]">
-                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                          <span>yt-dlp</span>
-                          <span className="text-emerald-400">必须</span>
-                        </div>
-                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                          <span>ffmpeg</span>
-                          <span className="text-emerald-400">必须</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>openai-whisper</span>
-                          <span className="text-blue-400">可选*</span>
-                        </div>
-                      </div>
-                      <p className="text-[9px] opacity-40 italic mt-2">*仅在需要 AI 转录时使用。</p>
-                    </div>
-                  </section>
-
-                  {/* Bookmarklet Section */}
-                  <section className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 italic flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                      浏览器插件 (Bookmarklet)
-                    </h4>
-                    <div className="bg-[#E8E8ED] rounded-2xl p-5 space-y-4 border border-[#1D1D1F]/5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-blue-600/10 rounded-lg flex items-center justify-center">
-                          <Info className="w-3.5 h-3.5 text-blue-700" />
-                        </div>
-                        <h4 className="text-[11px] font-black uppercase tracking-wider text-[#1D1D1F]/70">一键提取工具</h4>
-                      </div>
-                      <p className="text-[11px] text-[#1D1D1F]/50 leading-relaxed font-medium">
-                        将下方按钮拖动到您的浏览器书签栏。在 YouTube 页面点击它，即可瞬间生成并复制下载命令。
-                      </p>
-                      <a 
-                        ref={bookmarkletRef}
-                        href="#"
-                        onClick={(e) => e.preventDefault()}
-                        className="block w-full py-3 bg-white border border-blue-600/30 rounded-xl text-xs font-bold text-blue-700 text-center hover:bg-blue-50 transition-all shadow-md cursor-move active:scale-[0.98]"
-                      >
-                        YT-DLP Architect
-                      </a>
-                    </div>
-                  </section>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* History Overlay Panel */}
-          <AnimatePresence>
-            {showHistory && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="absolute inset-0 z-20 bg-white border border-[#1D1D1F]/15 rounded-[2.5rem] p-8 shadow-2xl shadow-[#1D1D1F]/20 flex flex-col"
+                <h3 className="text-base font-black uppercase tracking-wider text-[#1D1D1F]/80 italic">使用帮助</h3>
+              </div>
+              <button 
+                onClick={() => setShowHelp(false)}
+                className="p-2 hover:bg-[#E8E8ED] text-[#1D1D1F]/40 hover:text-[#1D1D1F] rounded-xl transition-colors"
               >
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
-                      <History className="w-5 h-5 text-blue-700" />
+                <Check className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-8 pb-8">
+              <section className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 italic flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  快速开始
+                </h4>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { step: "1", text: "将 YouTube 或 Bilibili 链接粘贴到输入框中。" },
+                    { step: "2", text: "选择您需要的下载类型（视频、音频或字幕）。" },
+                    { step: "3", text: "点击“复制命令”并将其粘贴到您的终端中运行。" }
+                  ].map((item) => (
+                    <div key={item.step} className="flex items-start gap-4 p-4 bg-[#E8E8ED]/50 rounded-2xl border border-[#1D1D1F]/5">
+                      <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[10px] font-black text-blue-600 shadow-sm shrink-0">{item.step}</span>
+                      <p className="text-xs font-medium text-[#1D1D1F]/70 leading-relaxed">{item.text}</p>
                     </div>
-                    <h3 className="text-base font-black uppercase tracking-wider text-[#1D1D1F]/80 italic">Recent Architectures</h3>
+                  ))}
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-purple-600 italic flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-600" />
+                  下载模式
+                </h4>
+                <div className="space-y-3">
+                  <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Video className="w-3.5 h-3.5 text-blue-500" />
+                      <span className="text-[10px] font-black uppercase tracking-wider">视频模式</span>
+                    </div>
+                    <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">下载最高画质的视频 (mkv)，并嵌入字幕和元数据。</p>
                   </div>
+                  <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Music className="w-3.5 h-3.5 text-purple-500" />
+                      <span className="text-[10px] font-black uppercase tracking-wider">音频模式</span>
+                    </div>
+                    <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">提取高质量 MP3 音频，并嵌入封面和元数据。</p>
+                  </div>
+                  <div className="p-4 bg-white border border-[#1D1D1F]/10 rounded-2xl shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Subtitles className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-[10px] font-black uppercase tracking-wider">智能字幕</span>
+                    </div>
+                    <p className="text-[10px] text-[#1D1D1F]/50 leading-relaxed">优先尝试下载原生字幕。如果未检测到，则会自动下载音频并使用 <b>OpenAI Whisper</b> 进行 AI 转录。</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-emerald-600 italic flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  环境要求
+                </h4>
+                <div className="p-5 bg-[#1D1D1F] rounded-3xl text-white/90 space-y-3 shadow-xl">
+                  <p className="text-[10px] font-medium opacity-60 uppercase tracking-widest">请确保已安装以下工具：</p>
+                  <div className="space-y-2 font-mono text-[10px]">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                      <span>yt-dlp</span>
+                      <span className="text-emerald-400">必须</span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                      <span>ffmpeg</span>
+                      <span className="text-emerald-400">必须</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>openai-whisper</span>
+                      <span className="text-blue-400">可选*</span>
+                    </div>
+                  </div>
+                  <p className="text-[9px] opacity-40 italic mt-2">*仅在需要 AI 转录时使用。</p>
+                </div>
+              </section>
+
+              {/* Bookmarklet Section */}
+              <section className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-blue-600 italic flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  浏览器插件 (Bookmarklet)
+                </h4>
+                <div className="bg-[#E8E8ED] rounded-2xl p-5 space-y-4 border border-[#1D1D1F]/5">
                   <div className="flex items-center gap-2">
-                    {history.length > 0 && (
-                      <button 
-                        onClick={clearHistory}
-                        className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-xl transition-colors"
-                        title="Clear History"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => setShowHistory(false)}
-                      className="p-2 hover:bg-[#F5F5F7] text-[#1D1D1F]/40 hover:text-[#1D1D1F] rounded-xl transition-colors"
-                    >
-                      <Check className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
-                  {history.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-                        <Clock className="w-8 h-8 text-[#1D1D1F]/10" />
-                      </div>
-                      <p className="text-xs text-[#1D1D1F]/30 font-medium italic">Your command history will appear here</p>
+                    <div className="w-6 h-6 bg-blue-600/10 rounded-lg flex items-center justify-center">
+                      <Info className="w-3.5 h-3.5 text-blue-700" />
                     </div>
-                  ) : (
-                    history.map((item) => {
-                      const isYoutube = item.url.includes('youtube.com') || item.url.includes('youtu.be');
-                      const videoId = isYoutube ? (item.url.split('v=')[1]?.split('&')[0] || item.url.split('/').pop()) : null;
-                      
-                      return (
-                        <motion.div
-                          key={item.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="group p-3 bg-[#F5F5F7]/50 border border-transparent hover:border-blue-500/20 hover:bg-white rounded-2xl transition-all cursor-pointer relative flex gap-3"
-                          onClick={() => {
-                            setUrl(item.url);
-                            setType(item.type);
-                            setShowHistory(false);
-                          }}
-                        >
-                          <div className="w-16 h-10 bg-[#F5F5F7] rounded-lg flex items-center justify-center overflow-hidden shrink-0 border border-[#1D1D1F]/5">
-                            {isYoutube ? (
-                              <img 
-                                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`} 
-                                alt="Thumb"
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <Youtube className="w-4 h-4 text-[#1D1D1F]/10" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <div className="flex items-center justify-between mb-0.5">
-                              <div className="flex items-center gap-1.5">
-                                {item.type === 'video' && <Video className="w-2.5 h-2.5 text-blue-500" />}
-                                {item.type === 'audio' && <Music className="w-2.5 h-2.5 text-purple-500" />}
-                                {item.type === 'subtitles' && <Subtitles className="w-2.5 h-2.5 text-emerald-500" />}
-                                <span className="text-[8px] font-bold uppercase text-[#1D1D1F]/40 tracking-widest">{item.type}</span>
-                              </div>
-                              <span className="text-[8px] text-[#1D1D1F]/30 font-mono">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
-                            <p className="text-[10px] font-medium truncate text-[#1D1D1F]/70 pr-6">{item.url}</p>
-                          </div>
-                          <div className="absolute top-1/2 -translate-y-1/2 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                copyFromHistory(item.command);
-                              }}
-                              className="p-1.5 bg-white border border-[#1D1D1F]/10 rounded-lg shadow-sm hover:text-blue-600 transition-all active:scale-90"
-                            >
-                              <Copy className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </motion.div>
-                      );
-                    })
-                  )}
-                </div>
-                
-                {history.length > 0 && (
-                  <p className="text-[9px] text-center text-[#1D1D1F]/20 mt-6 font-mono uppercase tracking-widest">
-                    Last 10 commands preserved
+                    <h4 className="text-[11px] font-black uppercase tracking-wider text-[#1D1D1F]/70">一键提取工具</h4>
+                  </div>
+                  <p className="text-[11px] text-[#1D1D1F]/50 leading-relaxed font-medium">
+                    将下方按钮拖动到您的浏览器书签栏。在 YouTube 页面点击它，即可瞬间生成并复制下载命令。
                   </p>
+                  <a 
+                    ref={bookmarkletRef}
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    className="block w-full py-3 bg-white border border-blue-600/30 rounded-xl text-xs font-bold text-blue-700 text-center hover:bg-blue-50 transition-all shadow-md cursor-move active:scale-[0.98]"
+                  >
+                    YT-DLP Architect
+                  </a>
+                </div>
+              </section>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="history"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="relative z-20 flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
+                  <History className="w-5 h-5 text-blue-700" />
+                </div>
+                <h3 className="text-base font-black uppercase tracking-wider text-[#1D1D1F]/80 italic">Recent Architectures</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {history.length > 0 && (
+                  <button 
+                    onClick={clearHistory}
+                    className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-xl transition-colors"
+                    title="Clear History"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
-              </motion.div>
+                <button 
+                  onClick={() => setShowHistory(false)}
+                  className="p-2 hover:bg-[#F5F5F7] text-[#1D1D1F]/40 hover:text-[#1D1D1F] rounded-xl transition-colors"
+                >
+                  <Check className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {history.length === 0 ? (
+                <div className="py-20 flex flex-col items-center justify-center text-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
+                    <Clock className="w-8 h-8 text-[#1D1D1F]/10" />
+                  </div>
+                  <p className="text-xs text-[#1D1D1F]/30 font-medium italic">Your command history will appear here</p>
+                </div>
+              ) : (
+                history.map((item) => {
+                  const isYoutube = item.url.includes('youtube.com') || item.url.includes('youtu.be');
+                  const videoId = isYoutube ? (item.url.split('v=')[1]?.split('&')[0] || item.url.split('/').pop()) : null;
+                  
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="group p-3 bg-[#F5F5F7]/50 border border-transparent hover:border-blue-500/20 hover:bg-white rounded-2xl transition-all cursor-pointer relative flex gap-3"
+                      onClick={() => {
+                        setUrl(item.url);
+                        setType(item.type);
+                        setShowHistory(false);
+                      }}
+                    >
+                      <div className="w-16 h-10 bg-[#F5F5F7] rounded-lg flex items-center justify-center overflow-hidden shrink-0 border border-[#1D1D1F]/5">
+                        {isYoutube ? (
+                          <img 
+                            src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`} 
+                            alt="Thumb"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <Youtube className="w-4 h-4 text-[#1D1D1F]/10" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <div className="flex items-center gap-1.5">
+                            {item.type === 'video' && <Video className="w-2.5 h-2.5 text-blue-500" />}
+                            {item.type === 'audio' && <Music className="w-2.5 h-2.5 text-purple-500" />}
+                            {item.type === 'subtitles' && <Subtitles className="w-2.5 h-2.5 text-emerald-500" />}
+                            <span className="text-[8px] font-bold uppercase text-[#1D1D1F]/40 tracking-widest">{item.type}</span>
+                          </div>
+                          <span className="text-[8px] text-[#1D1D1F]/30 font-mono">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <p className="text-[10px] font-medium truncate text-[#1D1D1F]/70 pr-6">{item.url}</p>
+                      </div>
+                      <div className="absolute top-1/2 -translate-y-1/2 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyFromHistory(item.command);
+                          }}
+                          className="p-1.5 bg-white border border-[#1D1D1F]/10 rounded-lg shadow-sm hover:text-blue-600 transition-all active:scale-90"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+            
+            {history.length > 0 && (
+              <p className="text-[9px] text-center text-[#1D1D1F]/20 mt-6 font-mono uppercase tracking-widest">
+                Last 10 commands preserved
+              </p>
             )}
-          </AnimatePresence>
-        </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
       </main>
 
       {/* Footer */}
