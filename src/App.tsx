@@ -154,11 +154,14 @@ export default function App() {
                `if yt-dlp ${playlistFlag} --write-subs --write-auto-subs --sub-langs "zh.*,en.*" --skip-download --convert-subs srt ${baseOutput} --no-cache-dir "${url}"; then\n` +
                `  echo "✅ Subtitles downloaded successfully."\n` +
                `else\n` +
-               `  echo "⚠️ Subtitle download failed or unavailable. Falling back to Whisper transcription..." && \\\n` +
-               `  yt-dlp ${playlistFlag} -x --audio-format wav --no-cache-dir -o "${tmpBase}.wav" "${url}" && \\\n` +
-               `  whisper "${tmpBase}.wav" --model medium --output_format srt --output_dir "${outputPath}" && \\\n` +
-               `  (for f in "${outputPath}/${tmpBase}"*.srt; do mv "$f" "${outputPath}/$(yt-dlp --get-filename -o "%(title)s" "${url}").whisper.srt"; break; done) && \\\n` +
-               `  rm "${tmpBase}.wav" && echo "✅ Whisper transcription complete.";\n` +
+               `  echo "⚠️ Subtitle download failed or unavailable. Falling back to Whisper transcription..."\n` +
+               `  yt-dlp ${playlistFlag} -x --audio-format wav --no-cache-dir -o "${tmpBase}.wav" "${url}"\n` +
+               `  whisper "${tmpBase}.wav" --model medium --output_format srt --output_dir "${outputPath}"\n` +
+               `  for f in "${outputPath}/${tmpBase}"*.srt; do\n` +
+               `    mv "$f" "${outputPath}/$(yt-dlp --get-filename -o "%(title)s" "${url}").whisper.srt"\n` +
+               `    break\n` +
+               `  done\n` +
+               `  rm "${tmpBase}.wav" && echo "✅ Whisper transcription complete."\n` +
                `fi`;
       
       default:
