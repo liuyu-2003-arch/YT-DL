@@ -150,14 +150,26 @@ export default function App() {
       
       case 'subtitles':
         return `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --skip-download --ignore-errors --sleep-subtitles 2 --no-cache-dir && \\\n` +
-               `echo "📝 正在提取纯文本内容..." && \\\n` +
-               `for f in "${outputPath}/"* ; do case "$f" in *.vtt|*.srt) sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$f" > "\${f%.*}.txt" ;; esac; done && \\\n` +
-               `echo "✅ 字幕与文本处理完成！"`;
+               `echo "🏷️ 正在重命名并提取文本内容..." && \\\n` +
+               `for f in "${outputPath}/"* ; do \\\n` +
+               `  case "$f" in \\\n` +
+               `    *.vtt|*.srt) \\\n` +
+               `      new_name="$f"; \\\n` +
+               `      if [[ "$f" == *".en-orig."* ]] || [[ "$f" == *".zh-orig."* ]]; then new_name="\${f%.*}.[原始字幕].\${f##*.}"; \\\n` +
+               `      elif [[ "$f" == *"-en."* ]] || [[ "$f" == *"-zh-"* ]]; then new_name="\${f%.*}.[自动翻译].\${f##*.}"; \\\n` +
+               `      else new_name="\${f%.*}.[自动生成].\${f##*.}"; fi; \\\n` +
+               `      [ "$f" != "$new_name" ] && mv "$f" "$new_name"; \\\n` +
+               `      sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" > "\${new_name%.*}.txt" ;; \\\n` +
+               `  esac; \\\n` +
+               `done && \\\n` +
+               `echo "✅ 字幕重命名与文本提取完成！"`;
       
       case 'transcribe':
         return `echo "🎙️ 正在启动 Whisper 语音识别转录..." && \\\n` +
                `yt-dlp ${playlistFlag} "${url}" -P "${outputPath}/" -o "%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt,txt --output_dir \\"${outputPath}/\\"" && \\\n` +
-               `echo "✅ 转录完成！请在目录中查看 .srt 和 .txt 文件：${outputPath}"`;
+               `echo "🏷️ 正在优化转录文件名..." && \\\n` +
+               `for f in "${outputPath}/"* ; do case "$f" in *.srt|*.txt) if [[ "$f" != *"[Whisper转录]"* ]]; then mv "$f" "\${f%.*}.[Whisper转录].\${f##*.}"; fi ;; esac; done && \\\n` +
+               `echo "✅ 转录完成！请在目录中查看带 [Whisper转录] 标识的文件：${outputPath}"`;
       
       default:
         return '';
