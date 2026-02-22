@@ -176,45 +176,45 @@ export default function App() {
   const bookmarkletCode = `javascript:(function(){const url=encodeURIComponent(window.location.href);window.open('${window.location.origin}${window.location.pathname}?url='+url+'&type=video&autocopy=true','_blank');})();`;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans selection:bg-blue-500/20 overflow-x-hidden">
-      {/* Background Gradient - Mac Style Light */}
+    <div className="min-h-screen bg-[#E8E8ED] text-[#1D1D1F] font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      {/* Background Gradient - Deeper Mac Style */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 blur-[150px] rounded-full" />
-        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-emerald-500/5 blur-[100px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-600/10 blur-[150px] rounded-full" />
+        <div className="absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-emerald-600/10 blur-[100px] rounded-full" />
       </div>
 
       <main className="relative z-10 max-w-3xl mx-auto px-6 py-12 md:py-16">
-        {/* Header - Artistic & Compact */}
+        {/* Header - Artistic & Compact - Responsive Fix */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-12"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12"
         >
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 transform -rotate-6 group hover:rotate-0 transition-transform duration-500">
-                <Terminal className="w-6 h-6 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/40 transform -rotate-6 group hover:rotate-0 transition-transform duration-500">
+                <Terminal className="w-8 h-8 text-white" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white border-2 border-[#F5F5F7] rounded-full flex items-center justify-center shadow-sm">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-white border-2 border-[#E8E8ED] rounded-full flex items-center justify-center shadow-md">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
               </div>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tighter text-[#1D1D1F] italic">ARCHITECT.</h1>
-              <p className="text-[10px] text-[#1D1D1F]/40 font-bold uppercase tracking-[0.2em]">YT-DLP Command Lab</p>
+              <h1 className="text-3xl font-black tracking-tighter text-[#1D1D1F] italic leading-none">ARCHITECT.</h1>
+              <p className="text-[11px] text-[#1D1D1F]/50 font-bold uppercase tracking-[0.25em] mt-1">YT-DLP Command Lab</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button 
               onClick={handleShare}
               disabled={!url || !isValid}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 text-xs font-semibold",
+                "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 text-xs font-bold",
                 shareCopied 
-                  ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20" 
-                  : "bg-white border-[#1D1D1F]/10 text-[#1D1D1F]/60 hover:border-[#1D1D1F]/20 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                  ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-600/30" 
+                  : "bg-white/80 backdrop-blur-md border-[#1D1D1F]/15 text-[#1D1D1F]/70 hover:border-[#1D1D1F]/30 hover:bg-white shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
               )}
             >
               {shareCopied ? <Check className="w-3.5 h-3.5" /> : <ExternalLink className="w-3.5 h-3.5" />}
@@ -224,10 +224,10 @@ export default function App() {
             <button 
               onClick={() => setShowHistory(!showHistory)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 text-xs font-semibold",
+                "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 text-xs font-bold",
                 showHistory 
-                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20" 
-                  : "bg-white border-[#1D1D1F]/10 text-[#1D1D1F]/60 hover:border-[#1D1D1F]/20 shadow-sm"
+                  ? "bg-blue-700 border-blue-700 text-white shadow-lg shadow-blue-700/30" 
+                  : "bg-white/80 backdrop-blur-md border-[#1D1D1F]/15 text-[#1D1D1F]/70 hover:border-[#1D1D1F]/30 hover:bg-white shadow-sm"
               )}
             >
               <History className="w-3.5 h-3.5" />
@@ -235,7 +235,7 @@ export default function App() {
               {history.length > 0 && (
                 <span className={cn(
                   "w-4 h-4 rounded-full flex items-center justify-center text-[9px]",
-                  showHistory ? "bg-white/20 text-white" : "bg-blue-500/10 text-blue-600"
+                  showHistory ? "bg-white/20 text-white" : "bg-blue-600/10 text-blue-700"
                 )}>
                   {history.length}
                 </span>
@@ -255,7 +255,7 @@ export default function App() {
             className="space-y-8 transition-all duration-500"
           >
             {/* Input Section */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="relative group">
                 <input 
                   type="text"
@@ -263,8 +263,8 @@ export default function App() {
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Paste YouTube or Bilibili URL here..."
                   className={cn(
-                    "w-full bg-white border border-[#1D1D1F]/10 rounded-2xl px-6 py-5 text-lg outline-none transition-all duration-300",
-                    "focus:border-blue-500/50 focus:ring-8 focus:ring-blue-500/5 shadow-sm placeholder:text-[#1D1D1F]/20",
+                    "w-full bg-white border border-[#1D1D1F]/15 rounded-2xl px-6 py-5 text-lg outline-none transition-all duration-300",
+                    "focus:border-blue-600/50 focus:ring-8 focus:ring-blue-600/5 shadow-md shadow-[#1D1D1F]/5 placeholder:text-[#1D1D1F]/25",
                     isValid === false && "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/5"
                   )}
                 />
@@ -285,9 +285,9 @@ export default function App() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white/80 backdrop-blur-xl border border-[#1D1D1F]/5 rounded-3xl p-4 shadow-sm flex flex-col gap-4"
+                    className="bg-white border border-[#1D1D1F]/10 rounded-3xl p-4 shadow-xl shadow-[#1D1D1F]/5 flex flex-col gap-4"
                   >
-                    <div className="aspect-video bg-[#F5F5F7] rounded-2xl flex items-center justify-center overflow-hidden relative border border-[#1D1D1F]/5">
+                    <div className="aspect-video bg-[#E8E8ED] rounded-2xl flex items-center justify-center overflow-hidden relative border border-[#1D1D1F]/5">
                       {url.includes('youtube.com') || url.includes('youtu.be') ? (
                         <img 
                           src={`https://img.youtube.com/vi/${url.split('v=')[1]?.split('&')[0] || url.split('/').pop()}/mqdefault.jpg`} 
@@ -324,7 +324,7 @@ export default function App() {
               {/* Options Column */}
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[#1D1D1F]/30 ml-1">Download Type</label>
+                  <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#1D1D1F]/50 ml-1 italic">Download Type</label>
                   <div className="grid grid-cols-1 gap-2">
                     {(['subtitles', 'video', 'audio'] as DownloadType[]).map((t) => (
                       <button
@@ -333,8 +333,8 @@ export default function App() {
                         className={cn(
                           "flex items-center justify-between px-5 py-3.5 rounded-2xl border transition-all duration-300",
                           type === t 
-                            ? "bg-white border-blue-500/20 text-blue-600 shadow-md shadow-blue-500/5 ring-1 ring-blue-500/10" 
-                            : "bg-white/50 border-transparent text-[#1D1D1F]/40 hover:bg-white hover:border-[#1D1D1F]/10"
+                            ? "bg-white border-blue-600/30 text-blue-700 shadow-lg shadow-blue-600/5 ring-1 ring-blue-600/10" 
+                            : "bg-white/60 border-transparent text-[#1D1D1F]/50 hover:bg-white hover:border-[#1D1D1F]/15"
                         )}
                       >
                         <div className="flex items-center gap-3">
@@ -350,7 +350,7 @@ export default function App() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[#1D1D1F]/30 ml-1">Output Path</label>
+                  <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#1D1D1F]/50 ml-1 italic">Output Path</label>
                   <div className="relative">
                     <input 
                       type="text"
@@ -368,13 +368,13 @@ export default function App() {
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
-                  <Terminal className="w-3.5 h-3.5 text-blue-600" />
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-[#1D1D1F]/30">Generated Command</label>
+                  <Terminal className="w-3.5 h-3.5 text-blue-700" />
+                  <label className="text-[11px] font-black uppercase tracking-[0.15em] text-[#1D1D1F]/50 italic">Generated Command</label>
                 </div>
                 {isValid && (
                   <button 
                     onClick={handleCopy}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white rounded-full text-[10px] font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+                    className="flex items-center gap-2 px-5 py-2 bg-blue-700 text-white rounded-full text-[10px] font-bold hover:bg-blue-800 transition-all shadow-xl shadow-blue-700/30 active:scale-95"
                   >
                     {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     {copied ? 'Copied!' : 'Copy Command'}
@@ -383,8 +383,8 @@ export default function App() {
               </div>
               
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                <div className="relative bg-white border border-[#1D1D1F]/10 rounded-[1.5rem] p-6 font-mono text-xs leading-relaxed overflow-x-auto min-h-[100px] flex items-center shadow-sm">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/15 to-purple-600/15 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                <div className="relative bg-white border border-[#1D1D1F]/15 rounded-[1.5rem] p-6 font-mono text-xs leading-relaxed overflow-x-auto min-h-[100px] flex items-center shadow-lg shadow-[#1D1D1F]/5">
                   {isValid && url ? (
                     <code className="text-[#1D1D1F]/80 whitespace-pre-wrap break-all selection:bg-blue-500/10">
                       {generatedCommand}
@@ -407,14 +407,14 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="absolute inset-0 z-20 bg-white/90 backdrop-blur-2xl border border-[#1D1D1F]/10 rounded-[2.5rem] p-8 shadow-2xl shadow-[#1D1D1F]/10 flex flex-col"
+                className="absolute inset-0 z-20 bg-white border border-[#1D1D1F]/15 rounded-[2.5rem] p-8 shadow-2xl shadow-[#1D1D1F]/20 flex flex-col"
               >
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                      <History className="w-4 h-4 text-blue-600" />
+                    <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center">
+                      <History className="w-5 h-5 text-blue-700" />
                     </div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-[#1D1D1F]/80">Recent Architectures</h3>
+                    <h3 className="text-base font-black uppercase tracking-wider text-[#1D1D1F]/80 italic">Recent Architectures</h3>
                   </div>
                   <div className="flex items-center gap-2">
                     {history.length > 0 && (
@@ -508,19 +508,21 @@ export default function App() {
                 )}
 
                 {/* Bookmarklet Section */}
-                <div className="mt-auto pt-8 border-t border-[#1D1D1F]/5">
-                  <div className="bg-[#F5F5F7] rounded-2xl p-4 space-y-3">
+                <div className="mt-auto pt-8 border-t border-[#1D1D1F]/10">
+                  <div className="bg-[#E8E8ED] rounded-2xl p-5 space-y-4 border border-[#1D1D1F]/5">
                     <div className="flex items-center gap-2">
-                      <Info className="w-3.5 h-3.5 text-blue-500" />
-                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#1D1D1F]/60">Browser Plugin (Bookmarklet)</h4>
+                      <div className="w-6 h-6 bg-blue-600/10 rounded-lg flex items-center justify-center">
+                        <Info className="w-3.5 h-3.5 text-blue-700" />
+                      </div>
+                      <h4 className="text-[11px] font-black uppercase tracking-wider text-[#1D1D1F]/70">Browser Plugin (Bookmarklet)</h4>
                     </div>
-                    <p className="text-[10px] text-[#1D1D1F]/40 leading-relaxed">
+                    <p className="text-[11px] text-[#1D1D1F]/50 leading-relaxed font-medium">
                       Drag the button below to your bookmarks bar. Click it while on a YouTube page to instantly generate and copy the command.
                     </p>
                     <a 
                       href={bookmarkletCode}
                       onClick={(e) => e.preventDefault()}
-                      className="block w-full py-2.5 bg-white border border-blue-500/20 rounded-xl text-[10px] font-bold text-blue-600 text-center hover:bg-blue-50 transition-all shadow-sm cursor-move"
+                      className="block w-full py-3 bg-white border border-blue-600/30 rounded-xl text-xs font-bold text-blue-700 text-center hover:bg-blue-50 transition-all shadow-md cursor-move active:scale-[0.98]"
                     >
                       YT-DLP Architect
                     </a>
