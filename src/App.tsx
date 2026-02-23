@@ -143,10 +143,10 @@ export default function App() {
     
     switch (type) {
       case 'video':
-        return `yt-dlp ${playlistFlag} --merge-output-format mkv --write-subs --write-auto-subs --sub-langs "zh.*,en.*" --convert-subs srt --embed-subs --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
+        return `yt-dlp ${playlistFlag} --merge-output-format mkv --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --embed-subs --embed-thumbnail --embed-metadata --ignore-errors --sleep-subtitles 5 ${baseOutput} "${url}"`;
       
       case 'audio':
-        return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata ${baseOutput} "${url}"`;
+        return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata --ignore-errors ${baseOutput} "${url}"`;
       
       case 'subtitles':
         return `yt-dlp ${playlistFlag} "${url}" -o "${outputPath}/%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --skip-download --ignore-errors --sleep-subtitles 5 --no-cache-dir && \\\n` +
