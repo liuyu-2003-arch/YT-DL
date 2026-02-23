@@ -143,7 +143,21 @@ export default function App() {
     
     switch (type) {
       case 'video':
-        return `yt-dlp ${playlistFlag} --merge-output-format mkv --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --embed-subs --embed-thumbnail --embed-metadata --ignore-errors --sleep-subtitles 5 ${baseOutput} "${url}"`;
+        return `yt-dlp ${playlistFlag} --merge-output-format mkv --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --embed-subs --embed-thumbnail --embed-metadata --ignore-errors --sleep-subtitles 5 --no-cache-dir ${baseOutput} "${url}" && \\\n` +
+               `echo "🏷️ 正在重命名并提取文本内容 (自动去重)..." && \\\n` +
+               `for f in "${outputPath}/"*/*.srt ; do \\\n` +
+               `  [ -f "$f" ] || continue; \\\n` +
+               `  [[ "$f" == *"[原始字幕]"* ]] || [[ "$f" == *"[自动翻译]"* ]] || [[ "$f" == *"[自动生成]"* ]] && continue; \\\n` +
+               `  new_name="$f"; \\\n` +
+               `  if [[ "$f" == *"orig"* ]]; then label="原始字幕"; \\\n` +
+               `  elif [[ "$f" == *"en-en"* ]]; then label="自动生成"; \\\n` +
+               `  elif [[ "$f" == *"-en"* ]] || [[ "$f" == *"-zh-"* ]] || [[ "$f" == *".zh-Hans."* ]] || [[ "$f" == *".zh-Hant."* ]]; then label="自动翻译"; \\\n` +
+               `  else label="原始字幕"; fi; \\\n` +
+               `  new_name="\${f%.*}.[\$label].srt"; \\\n` +
+               `  [ "$f" != "$new_name" ] && [ ! -f "$new_name" ] && mv "$f" "$new_name"; \\\n` +
+               `  sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" | uniq > "\${new_name%.*}.txt" ; \\\n` +
+               `done && \\\n` +
+               `echo "✅ 视频下载与字幕处理完成！"`;
       
       case 'audio':
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata --ignore-errors ${baseOutput} "${url}"`;
