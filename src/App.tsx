@@ -366,7 +366,19 @@ export default function App() {
                 <input 
                   type="text"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    // Detect Bilibili/YouTube share strings that contain text + URL
+                    if (val.includes('http') && (val.includes('【') || val.includes('】') || val.trim().split(/\s+/).length > 1)) {
+                      const urlMatch = val.match(/https?:\/\/[^\s]+/);
+                      if (urlMatch) {
+                        setUrl(urlMatch[0]);
+                        return;
+                      }
+                    }
+                    setUrl(val);
+                  }}
+                  onFocus={(e) => e.target.select()}
                   placeholder="Paste YouTube or Bilibili URL here..."
                   className={cn(
                     "w-full bg-white border border-[#1D1D1F]/10 rounded-2xl px-6 py-5 text-lg outline-none transition-all duration-300 text-[#1D1D1F]",
