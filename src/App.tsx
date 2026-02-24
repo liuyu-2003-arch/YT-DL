@@ -471,31 +471,6 @@ export default function App() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
-            {/* Local Mode Notice */}
-            {!isSocketConnected && isValid && url && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 flex items-start gap-3 mb-6"
-              >
-                <div className="w-8 h-8 bg-amber-500/10 rounded-xl flex items-center justify-center shrink-0">
-                  <Info className="w-4 h-4 text-amber-600" />
-                </div>
-                <div>
-                  <h4 className="text-[11px] font-bold text-amber-900">当前处于“在线预览”模式</h4>
-                  <p className="text-[10px] text-amber-900/60 leading-relaxed mt-0.5">
-                    Vercel 环境无法直接执行下载。请在本地终端运行项目以解锁“一键下载”功能。
-                    <button 
-                      onClick={() => setShowHelp(true)}
-                      className="ml-1 text-amber-700 underline font-bold"
-                    >
-                      查看本地运行指南
-                    </button>
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
             {/* Input Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
@@ -754,20 +729,33 @@ export default function App() {
                 </div>
                 {isValid && (
                   <div className="flex items-center gap-2">
-                    <button 
-                      id="start-download-btn"
-                      onClick={handleStartDownload}
-                      disabled={isDownloading || !isSocketConnected}
-                      className={cn(
-                        "flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-bold transition-all shadow-xl shadow-black/10 active:scale-95",
-                        (isDownloading || !isSocketConnected)
-                          ? "bg-black/10 text-black/40 cursor-not-allowed" 
-                          : "bg-emerald-500 text-white hover:bg-emerald-600"
+                    <div className="relative group/tooltip">
+                      {!isSocketConnected && (
+                        <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 p-4 bg-black text-white rounded-2xl text-[10px] leading-relaxed opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 z-50 shadow-2xl">
+                          <div className="font-bold mb-1 text-amber-400 flex items-center gap-2">
+                            <Info className="w-3 h-3" />
+                            当前处于“在线预览”模式
+                          </div>
+                          Vercel 环境无法直接执行下载。请在本地终端运行项目以解锁“一键下载”功能。
+                          <div className="mt-2 text-white/40 italic">提示：点击帮助查看本地运行指南</div>
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-black"></div>
+                        </div>
                       )}
-                    >
-                      {isDownloading && isSocketConnected ? <Loader2 className="w-3 h-3 animate-spin" /> : <Video className="w-3 h-3" />}
-                      {!isSocketConnected ? '仅限本地模式' : isDownloading ? '下载中...' : '启动下载'}
-                    </button>
+                      <button 
+                        id="start-download-btn"
+                        onClick={handleStartDownload}
+                        disabled={isDownloading || !isSocketConnected}
+                        className={cn(
+                          "flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-bold transition-all shadow-xl shadow-black/10 active:scale-95",
+                          (isDownloading || !isSocketConnected)
+                            ? "bg-black/10 text-black/40 cursor-not-allowed" 
+                            : "bg-emerald-500 text-white hover:bg-emerald-600"
+                        )}
+                      >
+                        {isDownloading && isSocketConnected ? <Loader2 className="w-3 h-3 animate-spin" /> : <Video className="w-3 h-3" />}
+                        {!isSocketConnected ? '仅限本地模式' : isDownloading ? '下载中...' : '启动下载'}
+                      </button>
+                    </div>
                     <button 
                       onClick={handleCopy}
                       className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-full text-[10px] font-bold hover:bg-zinc-800 transition-all shadow-xl shadow-black/10 active:scale-95"
@@ -884,28 +872,84 @@ export default function App() {
                   <div className="w-1.5 h-1.5 rounded-full bg-black/20" />
                   本地运行指南 (Local Deployment)
                 </h4>
-                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-5 space-y-4">
-                  <p className="text-[11px] text-emerald-900/60 leading-relaxed font-medium">
-                    由于 Vercel 环境限制，<b>“启动下载”</b>功能仅在本地运行时可用。请按照以下步骤在您的 Mac Mini 上启动：
-                  </p>
-                  <div className="space-y-3">
-                    <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-500/90 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/20">1.</span>
-                        <span>git clone [项目地址]</span>
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-6 space-y-6">
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-bold text-emerald-900">为什么需要本地运行？</h5>
+                    <p className="text-[11px] text-emerald-900/60 leading-relaxed">
+                      Vercel 等云平台出于安全和资源限制，不允许运行 <b>yt-dlp</b> 和 <b>ffmpeg</b>。
+                      在本地运行可以让网页直接调用您电脑上的硬件资源和下载工具，实现毫秒级响应。
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h5 className="text-xs font-bold text-emerald-900">详细操作步骤：</h5>
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-bold text-emerald-900">安装基础环境</p>
+                          <p className="text-[10px] text-emerald-900/60">确保您的电脑已安装 Node.js (v18+)。</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/20">2.</span>
-                        <span>npm install</span>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+                        <div className="space-y-2">
+                          <p className="text-[11px] font-bold text-emerald-900">下载并初始化</p>
+                          <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-400/90 space-y-1">
+                            <div># 克隆仓库</div>
+                            <div className="text-white">git clone [您的仓库地址]</div>
+                            <div className="mt-2"># 进入目录并安装依赖</div>
+                            <div className="text-white">cd yt-dlp-architect && npm install</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/20">3.</span>
-                        <span>npm run dev</span>
+                      <div className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+                        <div className="space-y-2">
+                          <p className="text-[11px] font-bold text-emerald-900">启动服务</p>
+                          <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-400/90 space-y-1">
+                            <div className="text-white">npm run dev</div>
+                          </div>
+                          <p className="text-[10px] text-emerald-900/60">
+                            终端显示 <span className="text-emerald-600 font-bold">Server running on http://localhost:3000</span> 即表示成功。
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-[10px] text-black/40 italic">
-                      启动后访问 <b>http://localhost:3000</b> 即可解锁完整功能。
+                  </div>
+
+                  <div className="p-4 bg-white/50 rounded-2xl border border-emerald-500/10">
+                    <p className="text-[10px] text-emerald-800/70 italic leading-relaxed">
+                      <b>提示：</b> 启动后，请务必在浏览器地址栏输入 <b>http://localhost:3000</b> 访问。
+                      此时页面右下角会显示“连接成功”，即可解锁“启动下载”按钮。
                     </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-black/30 italic flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-black/20" />
+                  环境依赖安装 (macOS)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 bg-zinc-900 rounded-3xl text-white space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">yt-dlp</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-[8px] font-bold uppercase">核心</span>
+                    </div>
+                    <div className="bg-black/50 rounded-xl p-3 font-mono text-[9px] text-zinc-400">
+                      brew install yt-dlp
+                    </div>
+                  </div>
+                  <div className="p-5 bg-zinc-900 rounded-3xl text-white space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">ffmpeg</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-[8px] font-bold uppercase">核心</span>
+                    </div>
+                    <div className="bg-black/50 rounded-xl p-3 font-mono text-[9px] text-zinc-400">
+                      brew install ffmpeg
+                    </div>
                   </div>
                 </div>
               </section>
