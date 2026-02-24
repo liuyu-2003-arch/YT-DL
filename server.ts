@@ -1,9 +1,18 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import fetch from "node-fetch";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { spawn } from "child_process";
 
 async function startServer() {
   const app = express();
+  const httpServer = createServer(app);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "*",
+    },
+  });
   const PORT = 3000;
 
   // API routes
@@ -90,6 +99,42 @@ async function startServer() {
     }
   });
 
+  // WebSocket logic
+  io.on("connection", (socket) => {
+    console.log("Client connected:", socket.id);
+
+    socket.on("start-download", (command: string) => {
+      console.log("Starting download with command:", command);
+      
+      // We use bash to execute the complex multi-line command
+      const process = spawn("bash", ["-c", command]);
+
+      process.stdout.on("data", (data) => {
+        const output = data.toString();
+        socket.emit("download-log", output);
+
+        // Parse progress
+        // Example: [download]  10.5% of 100.00MiB at 1.50MiB/s ETA 01:00
+        const progressMatch = output.match(/(\d+\.\d+)%/);
+        if (progressMatch) {
+          socket.emit("download-progress", parseFloat(progressMatch[1]));
+        }
+      });
+
+      process.stderr.on("data", (data) => {
+        socket.emit("download-log", `ERROR: ${data.toString()}`);
+      });
+
+      process.on("close", (code) => {
+        socket.emit("download-complete", code === 0);
+      });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Client disconnected");
+    });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -101,7 +146,7 @@ async function startServer() {
     app.use(express.static("dist"));
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { io, Socket } from 'socket.io-client';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -55,6 +56,14 @@ export default function App() {
   const [isPlaylist, setIsPlaylist] = useState(false);
   const [videoInfo, setVideoInfo] = useState<any>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  
+  // Download state
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadLogs, setDownloadLogs] = useState<string[]>([]);
+  const [downloadStatus, setDownloadStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
+  const socketRef = useRef<Socket | null>(null);
+  const logEndRef = useRef<HTMLDivElement>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -99,6 +108,48 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('yt_dlp_history', JSON.stringify(history));
   }, [history]);
+
+  // Socket connection
+  useEffect(() => {
+    socketRef.current = io();
+
+    socketRef.current.on('download-log', (log: string) => {
+      setDownloadLogs(prev => [...prev, log].slice(-100)); // Keep last 100 lines
+    });
+
+    socketRef.current.on('download-progress', (progress: number) => {
+      setDownloadProgress(progress);
+    });
+
+    socketRef.current.on('download-complete', (success: boolean) => {
+      setIsDownloading(false);
+      setDownloadStatus(success ? 'success' : 'error');
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // Auto-scroll logs
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [downloadLogs]);
+
+  const handleStartDownload = () => {
+    if (!generatedCommand || !socketRef.current) return;
+    
+    setDownloadLogs([]);
+    setDownloadProgress(0);
+    setIsDownloading(true);
+    setDownloadStatus('running');
+    
+    socketRef.current.emit('start-download', generatedCommand);
+  };
 
   // Validation logic
   useEffect(() => {
@@ -557,13 +608,28 @@ export default function App() {
                   <label className="text-[11px] font-black uppercase tracking-[0.15em] text-black/30 italic">Generated Command</label>
                 </div>
                 {isValid && (
-                  <button 
-                    onClick={handleCopy}
-                    className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-full text-[10px] font-bold hover:bg-zinc-800 transition-all shadow-xl shadow-black/10 active:scale-95"
-                  >
-                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copied ? 'Copied!' : 'Copy Command'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={handleStartDownload}
+                      disabled={isDownloading}
+                      className={cn(
+                        "flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-bold transition-all shadow-xl shadow-black/10 active:scale-95",
+                        isDownloading 
+                          ? "bg-black/10 text-black/40 cursor-not-allowed" 
+                          : "bg-emerald-500 text-white hover:bg-emerald-600"
+                      )}
+                    >
+                      {isDownloading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Video className="w-3 h-3" />}
+                      {isDownloading ? 'Downloading...' : 'Start Download'}
+                    </button>
+                    <button 
+                      onClick={handleCopy}
+                      className="flex items-center gap-2 px-5 py-2 bg-black text-white rounded-full text-[10px] font-bold hover:bg-zinc-800 transition-all shadow-xl shadow-black/10 active:scale-95"
+                    >
+                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      {copied ? 'Copied!' : 'Copy Command'}
+                    </button>
+                  </div>
                 )}
               </div>
               
@@ -582,6 +648,81 @@ export default function App() {
                   )}
                 </div>
               </div>
+
+              {/* Download Progress & Logs */}
+              <AnimatePresence>
+                {(isDownloading || downloadStatus !== 'idle') && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-6 space-y-4 overflow-hidden"
+                  >
+                    <div className="bg-white border border-black/5 rounded-3xl p-6 shadow-xl shadow-black/5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-xl flex items-center justify-center",
+                            downloadStatus === 'running' ? "bg-emerald-500/10 text-emerald-500" :
+                            downloadStatus === 'success' ? "bg-emerald-500 text-white" :
+                            downloadStatus === 'error' ? "bg-red-500 text-white" : "bg-black/5 text-black/40"
+                          )}>
+                            {downloadStatus === 'running' ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                             downloadStatus === 'success' ? <Check className="w-4 h-4" /> :
+                             downloadStatus === 'error' ? <AlertCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-black">
+                              {downloadStatus === 'running' ? 'Downloading Video...' :
+                               downloadStatus === 'success' ? 'Download Complete!' :
+                               downloadStatus === 'error' ? 'Download Failed' : 'Ready'}
+                            </h4>
+                            <p className="text-[10px] text-black/40 font-medium">
+                              {downloadStatus === 'running' ? `Progress: ${downloadProgress.toFixed(1)}%` :
+                               downloadStatus === 'success' ? 'Files saved to your output directory' :
+                               downloadStatus === 'error' ? 'Check logs for details' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        {downloadStatus !== 'running' && (
+                          <button 
+                            onClick={() => setDownloadStatus('idle')}
+                            className="text-[10px] font-bold text-black/20 hover:text-black transition-colors"
+                          >
+                            Dismiss
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="h-2 bg-black/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${downloadProgress}%` }}
+                          className={cn(
+                            "h-full transition-all duration-300",
+                            downloadStatus === 'error' ? "bg-red-500" : "bg-emerald-500"
+                          )}
+                        />
+                      </div>
+
+                      {/* Terminal Logs */}
+                      <div className="bg-black rounded-2xl p-4 font-mono text-[10px] leading-relaxed h-48 overflow-y-auto scrollbar-hide">
+                        {downloadLogs.map((log, i) => (
+                          <div key={i} className="text-emerald-500/80 whitespace-pre-wrap">
+                            <span className="text-emerald-500/30 mr-2">[{i+1}]</span>
+                            {log}
+                          </div>
+                        ))}
+                        {downloadLogs.length === 0 && (
+                          <div className="text-white/20 italic">Initializing terminal...</div>
+                        )}
+                        <div ref={logEndRef} />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         ) : showHelp ? (
