@@ -1,0 +1,104 @@
+import express from "express";
+import { createServer as createViteServer } from "vite";
+import fetch from "node-fetch";
+
+async function startServer() {
+  const app = express();
+  const PORT = 3000;
+
+  // API routes
+  app.get("/api/info", async (req, res) => {
+    const { url } = req.query;
+
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'Missing URL parameter' });
+    }
+
+    try {
+      // === 1. Bilibili 处理逻辑 ===
+      const biliMatch = url.match(/bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/);
+      if (biliMatch) {
+        const bvid = biliMatch[1];
+        const bApiUrl = `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`;
+        const bRes = await fetch(bApiUrl);
+        const bJson = (await bRes.json()) as any;
+
+        if (bJson.code === 0) {
+          const data = bJson.data;
+
+          // --- 解析分辨率 ---
+          let resolution = '1080P';
+          if (data.dimension) {
+              const { width, height } = data.dimension;
+              if (width >= 3840 || height >= 2160) resolution = '4K';
+              else if (width >= 2560 || height >= 1440) resolution = '2K';
+              else if (width >= 1920 || height >= 1080) resolution = '1080P';
+              else resolution = '720P';
+          }
+
+          // --- 解析字幕 ---
+          let has_zh = false;
+          let has_en = false;
+          if (data.subtitle && data.subtitle.list) {
+              data.subtitle.list.forEach((sub: any) => {
+                  const lan = sub.lan;
+                  const doc = sub.lan_doc;
+                  if (lan.includes('zh') || doc.includes('中')) has_zh = true;
+                  if (lan.includes('en') || doc.includes('英')) has_en = true;
+              });
+          }
+
+          return res.status(200).json({
+            title: data.title,
+            author_name: data.owner.name,
+            thumbnail_url: data.pic,
+            provider: 'bilibili',
+            max_res: resolution,
+            has_zh_sub: has_zh,
+            has_en_sub: has_en
+          });
+        }
+      }
+
+      // === 2. YouTube 处理逻辑 ===
+      const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+      const ytResponse = await fetch(oembedUrl);
+
+      if (ytResponse.ok) {
+        const data = (await ytResponse.json()) as any;
+        return res.status(200).json({
+          title: data.title,
+          author_name: data.author_name,
+          thumbnail_url: data.thumbnail_url,
+          provider: 'youtube',
+          max_res: null, 
+          has_zh_sub: null,
+          has_en_sub: null
+        });
+      }
+
+      throw new Error('Platform not supported or video not found');
+
+    } catch (error) {
+      console.error("API Info Error:", error);
+      return res.status(500).json({ error: 'Failed to fetch video details' });
+    }
+  });
+
+  // Vite middleware for development
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    app.use(express.static("dist"));
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();

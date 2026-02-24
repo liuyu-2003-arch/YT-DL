@@ -53,6 +53,7 @@ export default function App() {
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [title, setTitle] = useState('');
   const [isPlaylist, setIsPlaylist] = useState(false);
+  const [videoInfo, setVideoInfo] = useState<any>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -117,21 +118,21 @@ export default function App() {
     setIsValid(valid);
     setIsPlaylist(playlistRegex.test(url));
 
-    if (valid && isYoutube) {
-      fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`)
+    if (valid) {
+      fetch(`/api/info?url=${encodeURIComponent(url)}`)
         .then(res => res.json())
-        .then(data => setTitle(data.title))
-        .catch(() => setTitle(''));
-    } else if (valid && isBilibili) {
-      // For Bilibili, we try to extract BVID for display if title fetch fails
-      const bvidMatch = url.match(/\/video\/(BV[a-zA-Z0-9]+)/);
-      if (bvidMatch) {
-        setTitle(`Bilibili: ${bvidMatch[1]}`);
-      } else {
-        setTitle('Bilibili Video');
-      }
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          setTitle(data.title);
+          setVideoInfo(data);
+        })
+        .catch(() => {
+          setTitle('');
+          setVideoInfo(null);
+        });
     } else {
       setTitle('');
+      setVideoInfo(null);
     }
   }, [url]);
 
@@ -409,26 +410,13 @@ export default function App() {
                     className="bg-white border border-[#1D1D1F]/5 rounded-3xl p-4 shadow-xl shadow-black/5 flex flex-col gap-4 hover:border-black/10 transition-all group/preview active:scale-[0.98]"
                   >
                     <div className="aspect-video bg-[#F5F5F7] rounded-2xl flex items-center justify-center overflow-hidden relative border border-[#1D1D1F]/5">
-                      {url.includes('youtube.com') || url.includes('youtu.be') ? (
+                      {videoInfo?.thumbnail_url ? (
                         <img 
-                          src={`https://img.youtube.com/vi/${
-                            url.includes('v=') 
-                              ? url.split('v=')[1]?.split('&')[0] 
-                              : url.split('/').pop()?.split('?')[0]
-                          }/mqdefault.jpg`} 
+                          src={videoInfo.thumbnail_url} 
                           alt="Thumbnail"
                           className="w-full h-full object-cover group-hover/preview:scale-105 transition-transform duration-500 opacity-90 group-hover/preview:opacity-100"
                           referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="flex flex-col items-center gap-2 opacity-20"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-youtube"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 2-2 68.4 68.4 0 0 1 15 0 2 2 0 0 1 2 2 24.12 24.12 0 0 1 0 10 2 2 0 0 1-2 2 68.4 68.4 0 0 1-15 0 2 2 0 0 1-2-2Z"/><path d="m10 15 5-3-5-3z"/></svg></div>';
-                          }}
                         />
-                      ) : url.includes('bilibili.com') ? (
-                        <div className="flex flex-col items-center gap-3 opacity-20">
-                          <Video className="w-12 h-12 text-black" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Bilibili</span>
-                        </div>
                       ) : (
                         <Video className="w-10 h-10 text-black/5" />
                       )}
@@ -440,11 +428,25 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="absolute top-3 left-3">
+                      <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                         {isPlaylist ? (
                           <span className="px-2 py-1 bg-black text-white text-[9px] font-bold uppercase rounded-full shadow-lg">Playlist</span>
                         ) : (
                           <span className="px-2 py-1 bg-black/5 backdrop-blur-md text-black/60 text-[9px] font-bold uppercase rounded-full border border-black/5">Single</span>
+                        )}
+                        {videoInfo?.max_res && (
+                          <span className={cn(
+                            "px-2 py-1 text-[9px] font-bold uppercase rounded-full shadow-sm",
+                            videoInfo.max_res === '4K' ? "bg-orange-500 text-white" : "bg-white/80 backdrop-blur-md text-black/60 border border-black/5"
+                          )}>
+                            {videoInfo.max_res}
+                          </span>
+                        )}
+                        {videoInfo?.has_zh_sub && (
+                          <span className="px-2 py-1 bg-blue-500 text-white text-[9px] font-bold uppercase rounded-full shadow-sm">中字</span>
+                        )}
+                        {videoInfo?.has_en_sub && (
+                          <span className="px-2 py-1 bg-emerald-500 text-white text-[9px] font-bold uppercase rounded-full shadow-sm">英字</span>
                         )}
                       </div>
                     </div>
