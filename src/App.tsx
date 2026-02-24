@@ -62,6 +62,7 @@ export default function App() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadLogs, setDownloadLogs] = useState<string[]>([]);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -113,7 +114,21 @@ export default function App() {
   useEffect(() => {
     socketRef.current = io({
       path: "/socket.io/",
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5
+    });
+
+    socketRef.current.on('connect', () => {
+      setIsSocketConnected(true);
+      console.log("Connected to local server");
+    });
+
+    socketRef.current.on('connect_error', () => {
+      setIsSocketConnected(false);
+    });
+
+    socketRef.current.on('disconnect', () => {
+      setIsSocketConnected(false);
     });
 
     socketRef.current.on('download-log', (log: string) => {
@@ -450,6 +465,31 @@ export default function App() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-8"
               >
+            {/* Local Mode Notice */}
+            {!isSocketConnected && isValid && url && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 flex items-start gap-3 mb-6"
+              >
+                <div className="w-8 h-8 bg-amber-500/10 rounded-xl flex items-center justify-center shrink-0">
+                  <Info className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <h4 className="text-[11px] font-bold text-amber-900">当前处于“在线预览”模式</h4>
+                  <p className="text-[10px] text-amber-900/60 leading-relaxed mt-0.5">
+                    Vercel 环境无法直接执行下载。请在本地终端运行项目以解锁“一键下载”功能。
+                    <button 
+                      onClick={() => setShowHelp(true)}
+                      className="ml-1 text-amber-700 underline font-bold"
+                    >
+                      查看本地运行指南
+                    </button>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
             {/* Input Section */}
             <div className="space-y-3">
               <div className="relative group">
@@ -689,16 +729,16 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={handleStartDownload}
-                      disabled={isDownloading}
+                      disabled={isDownloading || !isSocketConnected}
                       className={cn(
                         "flex items-center gap-2 px-5 py-2 rounded-full text-[10px] font-bold transition-all shadow-xl shadow-black/10 active:scale-95",
-                        isDownloading 
+                        (isDownloading || !isSocketConnected)
                           ? "bg-black/10 text-black/40 cursor-not-allowed" 
                           : "bg-emerald-500 text-white hover:bg-emerald-600"
                       )}
                     >
-                      {isDownloading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Video className="w-3 h-3" />}
-                      {isDownloading ? 'Downloading...' : 'Start Download'}
+                      {isDownloading && isSocketConnected ? <Loader2 className="w-3 h-3 animate-spin" /> : <Video className="w-3 h-3" />}
+                      {!isSocketConnected ? '仅限本地模式' : isDownloading ? '下载中...' : '启动下载'}
                     </button>
                     <button 
                       onClick={handleCopy}
@@ -797,6 +837,37 @@ export default function App() {
                       <span className="text-[10px] font-black uppercase tracking-wider text-black">智能字幕</span>
                     </div>
                     <p className="text-[10px] text-black/40 leading-relaxed">优先尝试下载原生字幕。如果未检测到，则会自动下载音频并使用 <b>OpenAI Whisper</b> 进行 AI 转录。</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-black/30 italic flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-black/20" />
+                  本地运行指南 (Local Deployment)
+                </h4>
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-5 space-y-4">
+                  <p className="text-[11px] text-emerald-900/60 leading-relaxed font-medium">
+                    由于 Vercel 环境限制，<b>“启动下载”</b>功能仅在本地运行时可用。请按照以下步骤在您的 Mac Mini 上启动：
+                  </p>
+                  <div className="space-y-3">
+                    <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-500/90 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/20">1.</span>
+                        <span>git clone [项目地址]</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/20">2.</span>
+                        <span>npm install</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/20">3.</span>
+                        <span>npm run dev</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-black/40 italic">
+                      启动后访问 <b>http://localhost:3000</b> 即可解锁完整功能。
+                    </p>
                   </div>
                 </div>
               </section>
