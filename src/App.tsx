@@ -417,7 +417,7 @@ export default function App() {
                   onFocus={(e) => e.target.select()}
                   placeholder="Paste YouTube or Bilibili URL here..."
                   className={cn(
-                    "w-full bg-white border border-[#1D1D1F]/10 rounded-2xl px-6 py-5 text-lg outline-none transition-all duration-300 text-[#1D1D1F]",
+                    "w-full bg-white border border-[#1D1D1F]/10 rounded-2xl pl-6 pr-16 py-5 text-lg outline-none transition-all duration-300 text-[#1D1D1F]",
                     "focus:border-black/30 focus:ring-8 focus:ring-black/5 shadow-md shadow-black/5 placeholder:text-black/20",
                     isValid === false && "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/5"
                   )}

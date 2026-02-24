@@ -20,7 +20,12 @@ async function startServer() {
       if (biliMatch) {
         const bvid = biliMatch[1];
         const bApiUrl = `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`;
-        const bRes = await fetch(bApiUrl);
+        const bRes = await fetch(bApiUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.bilibili.com/'
+          }
+        });
         const bJson = (await bRes.json()) as any;
 
         if (bJson.code === 0) {
@@ -51,7 +56,7 @@ async function startServer() {
           return res.status(200).json({
             title: data.title,
             author_name: data.owner.name,
-            thumbnail_url: data.pic,
+            thumbnail_url: data.pic.replace('http://', 'https://'),
             provider: 'bilibili',
             max_res: resolution,
             has_zh_sub: has_zh,
