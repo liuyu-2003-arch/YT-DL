@@ -144,10 +144,14 @@ export default function App() {
     
     switch (type) {
       case 'video':
-        return `yt-dlp ${playlistFlag} --merge-output-format mkv --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --embed-subs --embed-thumbnail --embed-metadata --ignore-errors --sleep-subtitles 5 --no-cache-dir ${baseOutput} "${url}" && \\\n` +
+        return `TS_FILE="/tmp/yt_dlp_ts_$(date +%s)" && touch "$TS_FILE" && \\\n` +
+               `yt-dlp ${playlistFlag} --merge-output-format mkv --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --embed-subs --embed-thumbnail --embed-metadata --ignore-errors --sleep-subtitles 5 --no-cache-dir ${baseOutput} "${url}" && \\\n` +
                `echo "🏷️ 正在重命名并提取文本内容 (自动去重)..." && \\\n` +
+               `found_subs=false; \\\n` +
                `for f in "${outputPath}/"*/*.srt ; do \\\n` +
                `  [ -f "$f" ] || continue; \\\n` +
+               `  [ "$f" -nt "$TS_FILE" ] || continue; \\\n` +
+               `  found_subs=true; \\\n` +
                `  [[ "$f" == *"[原始字幕]"* ]] || [[ "$f" == *"[自动翻译]"* ]] || [[ "$f" == *"[自动生成]"* ]] && continue; \\\n` +
                `  new_name="$f"; \\\n` +
                `  if [[ "$f" == *"orig"* ]]; then label="原始字幕"; \\\n` +
@@ -157,17 +161,33 @@ export default function App() {
                `  new_name="\${f%.*}.[\$label].srt"; \\\n` +
                `  [ "$f" != "$new_name" ] && [ ! -f "$new_name" ] && mv "$f" "$new_name"; \\\n` +
                `  sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" | uniq > "\${new_name%.*}.txt" ; \\\n` +
-               `done && \\\n` +
-               `echo "✅ 视频下载与字幕处理完成！"`;
+               `done; \\\n` +
+               `if [ "$found_subs" = "false" ]; then \\\n` +
+               `  echo "⚠️ 未发现字幕，启动 Whisper 语音转文字..." && \\\n` +
+               `  for f in "${outputPath}/"*/*.mkv ; do \\\n` +
+               `    [ -f "$f" ] || continue; \\\n` +
+               `    [ "$f" -nt "$TS_FILE" ] || continue; \\\n` +
+               `    whisper "$f" --model medium --language Chinese --output_dir "\${f%/*}" --output_format srt && \\\n` +
+               `    mv "\${f%.*}.srt" "\${f%.*}.[Whisper].srt" && \\\n` +
+               `    sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "\${f%.*}.[Whisper].srt" | uniq > "\${f%.*}.[Whisper].txt" ; \\\n` +
+               `  done && \\\n` +
+               `  echo "✅ 视频下载与 Whisper 语音转文字完成！"; \\\n` +
+               `else \\\n` +
+               `  echo "✅ 视频下载与字幕处理完成！"; \\\n` +
+               `fi && rm "$TS_FILE"`;
       
       case 'audio':
         return `yt-dlp ${playlistFlag} -x --audio-format mp3 --embed-thumbnail --embed-metadata --ignore-errors ${baseOutput} "${url}"`;
       
       case 'subtitles':
-        return `yt-dlp ${playlistFlag} "${url}" -o "${outputPath}/%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --skip-download --ignore-errors --sleep-subtitles 5 --no-cache-dir && \\\n` +
+        return `TS_FILE="/tmp/yt_dlp_ts_$(date +%s)" && touch "$TS_FILE" && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -o "${outputPath}/%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --skip-download --ignore-errors --sleep-subtitles 5 --no-cache-dir && \\\n` +
                `echo "🏷️ 正在重命名并提取文本内容 (自动去重)..." && \\\n` +
+               `found_subs=false; \\\n` +
                `for f in "${outputPath}/"*/*.srt ; do \\\n` +
                `  [ -f "$f" ] || continue; \\\n` +
+               `  [ "$f" -nt "$TS_FILE" ] || continue; \\\n` +
+               `  found_subs=true; \\\n` +
                `  [[ "$f" == *"[原始字幕]"* ]] || [[ "$f" == *"[自动翻译]"* ]] || [[ "$f" == *"[自动生成]"* ]] && continue; \\\n` +
                `  new_name="$f"; \\\n` +
                `  if [[ "$f" == *"orig"* ]]; then label="原始字幕"; \\\n` +
@@ -177,19 +197,34 @@ export default function App() {
                `  new_name="\${f%.*}.[\$label].srt"; \\\n` +
                `  [ "$f" != "$new_name" ] && [ ! -f "$new_name" ] && mv "$f" "$new_name"; \\\n` +
                `  sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "$new_name" | uniq > "\${new_name%.*}.txt" ; \\\n` +
-               `done && \\\n` +
-               `echo "✅ 字幕重命名与文本提取完成！"`;
+               `done; \\\n` +
+               `if [ "$found_subs" = "false" ]; then \\\n` +
+               `  echo "⚠️ 未发现字幕，启动 Whisper 语音转文字..." && \\\n` +
+               `  yt-dlp ${playlistFlag} -x --audio-format wav -o "${outputPath}/%(title)s/%(title)s.%(ext)s" "${url}" && \\\n` +
+               `  for f in "${outputPath}/"*/*.wav ; do \\\n` +
+               `    [ -f "$f" ] || continue; \\\n` +
+               `    [ "$f" -nt "$TS_FILE" ] || continue; \\\n` +
+               `    whisper "$f" --model medium --language Chinese --output_dir "\${f%/*}" --output_format srt && \\\n` +
+               `    mv "\${f%.*}.srt" "\${f%.*}.[Whisper].srt" && \\\n` +
+               `    sed -E 's/<[^>]*>//g; /^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/d; /^[0-9]+$/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^$/d' "\${f%.*}.[Whisper].srt" | uniq > "\${f%.*}.[Whisper].txt" ; \\\n` +
+               `  done && \\\n` +
+               `  echo "✅ Whisper 语音转文字完成！"; \\\n` +
+               `else \\\n` +
+               `  echo "✅ 字幕重命名与文本提取完成！"; \\\n` +
+               `fi && rm "$TS_FILE"`;
       
       case 'transcribe':
-        return `echo "🎙️ 正在启动 Whisper 语音识别转录..." && \\\n` +
-               `yt-dlp ${playlistFlag} "${url}" -o "${outputPath}/%(title)s/%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir --exec "whisper {} --model medium --output_format srt,txt --output_dir \\"$(dirname {})\\"" && \\\n` +
-               `echo "🏷️ 正在优化转录文件名..." && \\\n` +
-               `for f in "${outputPath}/"*/*.{srt,txt} ; do \\\n` +
+        return `TS_FILE="/tmp/yt_dlp_ts_$(date +%s)" && touch "$TS_FILE" && \\\n` +
+               `echo "🎙️ 正在启动 Whisper 语音识别转录..." && \\\n` +
+               `yt-dlp ${playlistFlag} "${url}" -o "${outputPath}/%(title)s/%(title)s.%(ext)s" -x --audio-format mp3 --no-cache-dir && \\\n` +
+               `for f in "${outputPath}/"*/*.mp3 ; do \\\n` +
                `  [ -f "$f" ] || continue; \\\n` +
-               `  [[ "$f" == *"[Whisper转录]"* ]] && continue; \\\n` +
-               `  mv "$f" "\${f%.*}.[Whisper转录].\${f##*.}"; \\\n` +
+               `  [ "$f" -nt "$TS_FILE" ] || continue; \\\n` +
+               `  whisper "$f" --model medium --output_format srt,txt --output_dir "\${f%/*}" && \\\n` +
+               `  mv "\${f%.*}.srt" "\${f%.*}.[Whisper转录].srt" && \\\n` +
+               `  mv "\${f%.*}.txt" "\${f%.*}.[Whisper转录].txt"; \\\n` +
                `done && \\\n` +
-               `echo "✅ 转录完成！请在视频对应目录中查看带 [Whisper转录] 标识的文件"`;
+               `echo "✅ 转录完成！请在视频对应目录中查看带 [Whisper转录] 标识的文件" && rm "$TS_FILE"`;
       
       default:
         return '';
