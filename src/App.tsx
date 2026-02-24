@@ -63,6 +63,7 @@ export default function App() {
   const [downloadLogs, setDownloadLogs] = useState<string[]>([]);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [autoDownload, setAutoDownload] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -188,6 +189,11 @@ export default function App() {
     setIsPlaylist(playlistRegex.test(url));
 
     if (valid) {
+      // Auto-download trigger for OpenClaw
+      if (autoDownload && isSocketConnected && !isDownloading) {
+        setTimeout(() => handleStartDownload(), 800);
+      }
+
       fetch(`/api/info?url=${encodeURIComponent(url)}`)
         .then(res => res.json())
         .then(data => {
@@ -492,8 +498,29 @@ export default function App() {
 
             {/* Input Section */}
             <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-black/20 italic">Video URL</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <span className="text-[10px] font-bold text-black/30 group-hover:text-black/50 transition-colors">自动下载 (OpenClaw)</span>
+                    <button 
+                      onClick={() => setAutoDownload(!autoDownload)}
+                      className={cn(
+                        "w-8 h-4 rounded-full transition-all duration-300 relative",
+                        autoDownload ? "bg-emerald-500" : "bg-black/10"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-2 h-2 bg-white rounded-full transition-all duration-300",
+                        autoDownload ? "left-5" : "left-1"
+                      )} />
+                    </button>
+                  </label>
+                </div>
+              </div>
               <div className="relative group">
                 <input 
+                  id="url-input"
                   type="text"
                   value={url}
                   onChange={(e) => {
@@ -728,6 +755,7 @@ export default function App() {
                 {isValid && (
                   <div className="flex items-center gap-2">
                     <button 
+                      id="start-download-btn"
                       onClick={handleStartDownload}
                       disabled={isDownloading || !isSocketConnected}
                       className={cn(
@@ -755,7 +783,7 @@ export default function App() {
                 <div className="absolute -inset-1 bg-gradient-to-r from-black/5 to-zinc-500/5 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
                 <div className="relative bg-[#F5F5F7] border border-black/5 rounded-[1.5rem] p-6 font-mono text-xs leading-relaxed overflow-x-auto min-h-[100px] flex items-center shadow-lg shadow-black/5">
                   {isValid && url ? (
-                    <code className="text-black/70 whitespace-pre-wrap break-all selection:bg-black/10">
+                    <code id="generated-command" className="text-black/70 whitespace-pre-wrap break-all selection:bg-black/10">
                       {generatedCommand}
                     </code>
                   ) : (
@@ -767,6 +795,16 @@ export default function App() {
                 </div>
               </div>
             </div>
+            {/* OpenClaw Metadata (Hidden) */}
+            <script id="openclaw-metadata" type="application/json">
+              {JSON.stringify({
+                version: "1.0",
+                is_connected: isSocketConnected,
+                current_command: generatedCommand,
+                status: downloadStatus,
+                progress: downloadProgress
+              })}
+            </script>
           </motion.div>
         ) : showHelp ? (
           <motion.div 
