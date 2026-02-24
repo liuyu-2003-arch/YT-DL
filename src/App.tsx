@@ -111,7 +111,10 @@ export default function App() {
 
   // Socket connection
   useEffect(() => {
-    socketRef.current = io();
+    socketRef.current = io({
+      path: "/socket.io/",
+      transports: ['websocket', 'polling']
+    });
 
     socketRef.current.on('download-log', (log: string) => {
       setDownloadLogs(prev => [...prev, log].slice(-100)); // Keep last 100 lines
@@ -600,6 +603,81 @@ export default function App() {
               </div>
             </div>
 
+            {/* Download Progress & Logs */}
+            <AnimatePresence>
+              {(isDownloading || downloadStatus !== 'idle') && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-6 space-y-4 overflow-hidden"
+                >
+                  <div className="bg-white border border-black/5 rounded-3xl p-6 shadow-xl shadow-black/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-8 h-8 rounded-xl flex items-center justify-center",
+                          downloadStatus === 'running' ? "bg-emerald-500/10 text-emerald-500" :
+                          downloadStatus === 'success' ? "bg-emerald-500 text-white" :
+                          downloadStatus === 'error' ? "bg-red-500 text-white" : "bg-black/5 text-black/40"
+                        )}>
+                          {downloadStatus === 'running' ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                           downloadStatus === 'success' ? <Check className="w-4 h-4" /> :
+                           downloadStatus === 'error' ? <AlertCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-black">
+                            {downloadStatus === 'running' ? '正在下载/处理中...' :
+                             downloadStatus === 'success' ? '下载完成！' :
+                             downloadStatus === 'error' ? '下载失败' : '准备就绪'}
+                          </h4>
+                          <p className="text-[10px] text-black/40 font-medium">
+                            {downloadStatus === 'running' ? `当前进度: ${downloadProgress.toFixed(1)}%` :
+                             downloadStatus === 'success' ? '文件已保存至您的输出目录' :
+                             downloadStatus === 'error' ? '请查看下方日志了解详情' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      {downloadStatus !== 'running' && (
+                        <button 
+                          onClick={() => setDownloadStatus('idle')}
+                          className="text-[10px] font-bold text-black/20 hover:text-black transition-colors"
+                        >
+                          关闭
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="h-2 bg-black/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${downloadProgress}%` }}
+                        className={cn(
+                          "h-full transition-all duration-300",
+                          downloadStatus === 'error' ? "bg-red-500" : "bg-emerald-500"
+                        )}
+                      />
+                    </div>
+
+                    {/* Terminal Logs */}
+                    <div className="bg-black rounded-2xl p-4 font-mono text-[10px] leading-relaxed h-48 overflow-y-auto scrollbar-hide">
+                      {downloadLogs.map((log, i) => (
+                        <div key={i} className="text-emerald-500/80 whitespace-pre-wrap">
+                          <span className="text-emerald-500/30 mr-2">[{i+1}]</span>
+                          {log}
+                        </div>
+                      ))}
+                      {downloadLogs.length === 0 && (
+                        <div className="text-white/20 italic">正在初始化终端...</div>
+                      )}
+                      <div ref={logEndRef} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Command Output Area */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between px-2">
@@ -648,81 +726,6 @@ export default function App() {
                   )}
                 </div>
               </div>
-
-              {/* Download Progress & Logs */}
-              <AnimatePresence>
-                {(isDownloading || downloadStatus !== 'idle') && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-6 space-y-4 overflow-hidden"
-                  >
-                    <div className="bg-white border border-black/5 rounded-3xl p-6 shadow-xl shadow-black/5 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-xl flex items-center justify-center",
-                            downloadStatus === 'running' ? "bg-emerald-500/10 text-emerald-500" :
-                            downloadStatus === 'success' ? "bg-emerald-500 text-white" :
-                            downloadStatus === 'error' ? "bg-red-500 text-white" : "bg-black/5 text-black/40"
-                          )}>
-                            {downloadStatus === 'running' ? <Loader2 className="w-4 h-4 animate-spin" /> :
-                             downloadStatus === 'success' ? <Check className="w-4 h-4" /> :
-                             downloadStatus === 'error' ? <AlertCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-black">
-                              {downloadStatus === 'running' ? 'Downloading Video...' :
-                               downloadStatus === 'success' ? 'Download Complete!' :
-                               downloadStatus === 'error' ? 'Download Failed' : 'Ready'}
-                            </h4>
-                            <p className="text-[10px] text-black/40 font-medium">
-                              {downloadStatus === 'running' ? `Progress: ${downloadProgress.toFixed(1)}%` :
-                               downloadStatus === 'success' ? 'Files saved to your output directory' :
-                               downloadStatus === 'error' ? 'Check logs for details' : ''}
-                            </p>
-                          </div>
-                        </div>
-                        {downloadStatus !== 'running' && (
-                          <button 
-                            onClick={() => setDownloadStatus('idle')}
-                            className="text-[10px] font-bold text-black/20 hover:text-black transition-colors"
-                          >
-                            Dismiss
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="h-2 bg-black/5 rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${downloadProgress}%` }}
-                          className={cn(
-                            "h-full transition-all duration-300",
-                            downloadStatus === 'error' ? "bg-red-500" : "bg-emerald-500"
-                          )}
-                        />
-                      </div>
-
-                      {/* Terminal Logs */}
-                      <div className="bg-black rounded-2xl p-4 font-mono text-[10px] leading-relaxed h-48 overflow-y-auto scrollbar-hide">
-                        {downloadLogs.map((log, i) => (
-                          <div key={i} className="text-emerald-500/80 whitespace-pre-wrap">
-                            <span className="text-emerald-500/30 mr-2">[{i+1}]</span>
-                            {log}
-                          </div>
-                        ))}
-                        {downloadLogs.length === 0 && (
-                          <div className="text-white/20 italic">Initializing terminal...</div>
-                        )}
-                        <div ref={logEndRef} />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </motion.div>
         ) : showHelp ? (

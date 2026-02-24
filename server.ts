@@ -9,6 +9,7 @@ async function startServer() {
   const app = express();
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
+    path: "/socket.io/",
     cors: {
       origin: "*",
     },
@@ -106,18 +107,30 @@ async function startServer() {
     socket.on("start-download", (command: string) => {
       console.log("Starting download with command:", command);
       
-      // We use bash to execute the complex multi-line command
-      const process = spawn("bash", ["-c", command]);
+      // Add --newline and a custom progress template to make parsing easier
+      // We append it to the command if it's a yt-dlp call
+      let modifiedCommand = command;
+      if (command.includes("yt-dlp")) {
+        modifiedCommand = command.replace("yt-dlp", "yt-dlp --newline --progress-template \"[progress] %(progress.percentage)s%\"");
+      }
+
+      const process = spawn("bash", ["-c", modifiedCommand]);
 
       process.stdout.on("data", (data) => {
         const output = data.toString();
         socket.emit("download-log", output);
 
-        // Parse progress
-        // Example: [download]  10.5% of 100.00MiB at 1.50MiB/s ETA 01:00
-        const progressMatch = output.match(/(\d+\.\d+)%/);
+        // Parse progress from our custom template
+        // [progress] 10.5%
+        const progressMatch = output.match(/\[progress\]\s+(\d+(\.\d+)?)%/);
         if (progressMatch) {
           socket.emit("download-progress", parseFloat(progressMatch[1]));
+        } else {
+          // Fallback to standard yt-dlp progress format
+          const fallbackMatch = output.match(/(\d+(\.\d+)?)%/);
+          if (fallbackMatch) {
+            socket.emit("download-progress", parseFloat(fallbackMatch[1]));
+          }
         }
       });
 
