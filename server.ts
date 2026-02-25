@@ -7,6 +7,7 @@ import { spawn } from "child_process";
 
 async function startServer() {
   const app = express();
+  app.use(express.json());
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
     path: "/socket.io/",
@@ -98,6 +99,49 @@ async function startServer() {
       console.error("API Info Error:", error);
       return res.status(500).json({ error: 'Failed to fetch video details' });
     }
+  });
+
+  app.post("/api/download", (req, res) => {
+    const { url, type, outputPath } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ error: 'Missing URL' });
+    }
+
+    const path = outputPath || "/Users/yuliu/Movies/YouTube DL/";
+    const downloadType = type || "video";
+
+    let command = "";
+    if (downloadType === "video") {
+      command = `yt-dlp --no-playlist "${url}" -o "${path}%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --embed-subs --embed-metadata --merge-output-format mkv --ignore-errors --no-cache-dir`;
+    } else if (downloadType === "audio") {
+      command = `yt-dlp --no-playlist "${url}" -o "${path}%(title)s/%(title)s.%(ext)s" -x --audio-format mp3 --audio-quality 0 --embed-thumbnail --embed-metadata --ignore-errors --no-cache-dir`;
+    } else if (downloadType === "subtitle") {
+      command = `yt-dlp --no-playlist "${url}" -o "${path}%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --skip-download --ignore-errors --no-cache-dir`;
+    }
+
+    console.log("API Starting download:", command);
+    
+    const process = spawn("bash", ["-c", command]);
+    let logs = "";
+
+    process.stdout.on("data", (data) => {
+      logs += data.toString();
+    });
+
+    process.stderr.on("data", (data) => {
+      logs += `ERROR: ${data.toString()}`;
+    });
+
+    process.on("close", (code) => {
+      console.log(`API Download finished with code ${code}`);
+    });
+
+    res.json({ 
+      status: "started", 
+      command,
+      message: "Download process started in background. Check server logs for details."
+    });
   });
 
   // WebSocket logic

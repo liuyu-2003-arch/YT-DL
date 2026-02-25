@@ -979,6 +979,44 @@ export default function App() {
                 </div>
               </section>
 
+              {/* OpenClaw API Section */}
+              <section className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-black/30 italic flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-black/20" />
+                  OpenClaw API 接口
+                </h4>
+                <div className="bg-blue-500/5 border border-blue-500/10 rounded-3xl p-6 space-y-4">
+                  <p className="text-[11px] text-blue-900/60 leading-relaxed font-medium">
+                    您可以通过 POST 请求直接调用本地服务进行下载，非常适合 OpenClaw 或自动化脚本。
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black rounded uppercase">POST</span>
+                        <code className="text-[10px] font-bold text-blue-900">/api/download</code>
+                      </div>
+                      <div className="bg-black rounded-xl p-4 font-mono text-[9px] text-blue-400/90 space-y-2">
+                        <div>{"{"}</div>
+                        <div className="pl-4">"url": "https://www.youtube.com/watch?v=...",</div>
+                        <div className="pl-4">"type": "video", <span className="text-white/20">// video | audio | subtitle</span></div>
+                        <div className="pl-4">"outputPath": "/Users/yuliu/Movies/YouTube DL/"</div>
+                        <div>{"}"}</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h5 className="text-[10px] font-bold text-blue-900">cURL 示例：</h5>
+                      <div className="bg-black rounded-xl p-4 font-mono text-[9px] text-white/70 break-all">
+                        curl -X POST http://localhost:3000/api/download \<br/>
+                        -H "Content-Type: application/json" \<br/>
+                        -d '{"{"}"url": "视频链接", "type": "video"{"}"}'
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               {/* Bookmarklet Section */}
               <section className="space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-widest text-black/30 italic flex items-center gap-2">
