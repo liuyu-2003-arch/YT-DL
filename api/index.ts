@@ -1,12 +1,5 @@
-import { app, createServerApp } from '../server';
+import { app } from '../server';
 
-// Initialize the app for Vercel
-let initialized = false;
-
-export default async function handler(req: any, res: any) {
-  if (!initialized) {
-    await createServerApp();
-    initialized = true;
-  }
+export default function handler(req: any, res: any) {
   return app(req, res);
 }
