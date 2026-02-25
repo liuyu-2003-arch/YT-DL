@@ -35,6 +35,30 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const CopyButton = ({ text, className }: { text: string; className?: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={cn(
+        "p-1.5 rounded-lg transition-all active:scale-95",
+        copied ? "bg-emerald-500/20 text-emerald-500" : "bg-white/10 text-white/40 hover:bg-white/20 hover:text-white",
+        className
+      )}
+    >
+      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+    </button>
+  );
+};
+
 type DownloadType = 'video' | 'audio' | 'subtitles' | 'transcribe';
 
 interface HistoryItem {
@@ -829,9 +853,9 @@ export default function App() {
                     { step: "2", text: "选择您需要的下载类型（视频、音频或字幕）。" },
                     { step: "3", text: "点击“复制命令”并将其粘贴到您的终端中运行。" }
                   ].map((item) => (
-                    <div key={item.step} className="flex items-start gap-4 p-4 bg-black/5 rounded-2xl border border-black/5">
-                      <span className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-[10px] font-black text-white shadow-sm shrink-0">{item.step}</span>
-                      <p className="text-xs font-medium text-black/60 leading-relaxed">{item.text}</p>
+                    <div key={item.step} className="flex items-center gap-4 p-5 bg-black/[0.03] rounded-2xl border border-black/5 hover:bg-black/[0.05] transition-colors">
+                      <span className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-[11px] font-black text-white shadow-lg shrink-0">{item.step}</span>
+                      <p className="text-[13px] font-medium text-black/70 leading-relaxed">{item.text}</p>
                     </div>
                   ))}
                 </div>
@@ -842,27 +866,27 @@ export default function App() {
                   <div className="w-1.5 h-1.5 rounded-full bg-black/20" />
                   下载模式
                 </h4>
-                <div className="space-y-3">
-                  <div className="p-4 bg-white border border-black/5 rounded-2xl shadow-sm">
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="p-5 bg-white border border-black/5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 mb-2">
-                      <Video className="w-3.5 h-3.5 text-black" />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-black">视频模式</span>
+                      <Video className="w-4 h-4 text-black" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-black">视频模式</span>
                     </div>
-                    <p className="text-[10px] text-black/40 leading-relaxed">下载最高画质的视频 (mkv)，并嵌入字幕和元数据。</p>
+                    <p className="text-[11px] text-black/50 leading-relaxed">下载最高画质的视频 (mkv)，并嵌入字幕和元数据。</p>
                   </div>
-                  <div className="p-4 bg-white border border-black/5 rounded-2xl shadow-sm">
+                  <div className="p-5 bg-white border border-black/5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 mb-2">
-                      <Music className="w-3.5 h-3.5 text-black" />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-black">音频模式</span>
+                      <Music className="w-4 h-4 text-black" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-black">音频模式</span>
                     </div>
-                    <p className="text-[10px] text-black/40 leading-relaxed">提取高质量 MP3 音频，并嵌入封面和元数据。</p>
+                    <p className="text-[11px] text-black/50 leading-relaxed">提取高质量 MP3 音频，并嵌入封面和元数据。</p>
                   </div>
-                  <div className="p-4 bg-white border border-black/5 rounded-2xl shadow-sm">
+                  <div className="p-5 bg-white border border-black/5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 mb-2">
-                      <Subtitles className="w-3.5 h-3.5 text-black" />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-black">智能字幕</span>
+                      <Subtitles className="w-4 h-4 text-black" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-black">智能字幕</span>
                     </div>
-                    <p className="text-[10px] text-black/40 leading-relaxed">优先尝试下载原生字幕。如果未检测到，则会自动下载音频并使用 <b>OpenAI Whisper</b> 进行 AI 转录。</p>
+                    <p className="text-[11px] text-black/50 leading-relaxed">优先尝试下载原生字幕。如果未检测到，则会自动下载音频并使用 <b>OpenAI Whisper</b> 进行 AI 转录。</p>
                   </div>
                 </div>
               </section>
@@ -895,11 +919,17 @@ export default function App() {
                         <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
                         <div className="space-y-2">
                           <p className="text-[11px] font-bold text-emerald-900">下载并初始化</p>
-                          <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-400/90 space-y-1">
-                            <div># 克隆仓库</div>
-                            <div className="text-white">git clone [您的仓库地址]</div>
-                            <div className="mt-2"># 进入目录并安装依赖</div>
-                            <div className="text-white">cd yt-dlp-architect && npm install</div>
+                          <div className="relative group">
+                            <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-400/90 space-y-1">
+                              <div># 克隆仓库</div>
+                              <div className="text-white">git clone [您的仓库地址]</div>
+                              <div className="mt-2"># 进入目录并安装依赖</div>
+                              <div className="text-white">cd yt-dlp-architect && npm install</div>
+                            </div>
+                            <CopyButton 
+                              text={`git clone [您的仓库地址]\ncd yt-dlp-architect && npm install`} 
+                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"
+                            />
                           </div>
                         </div>
                       </div>
@@ -907,8 +937,14 @@ export default function App() {
                         <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-700 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
                         <div className="space-y-2">
                           <p className="text-[11px] font-bold text-emerald-900">启动服务</p>
-                          <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-400/90 space-y-1">
-                            <div className="text-white">npm run dev</div>
+                          <div className="relative group">
+                            <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-emerald-400/90 space-y-1">
+                              <div className="text-white">npm run dev</div>
+                            </div>
+                            <CopyButton 
+                              text="npm run dev" 
+                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"
+                            />
                           </div>
                           <p className="text-[10px] text-emerald-900/60">
                             终端显示 <span className="text-emerald-600 font-bold">Server running on http://localhost:3000</span> 即表示成功。
@@ -920,7 +956,7 @@ export default function App() {
 
                   <div className="p-4 bg-white/50 rounded-2xl border border-emerald-500/10">
                     <p className="text-[10px] text-emerald-800/70 italic leading-relaxed">
-                      <b>提示：</b> 启动后，请务必在浏览器地址栏输入 <b>http://localhost:3000</b> 访问。
+                      <b>提示：</b> 启动后，建议在浏览器地址栏输入 <span className="text-emerald-600 font-bold underline">https://yt-dlp.324893.xyz</span> 访问。
                       此时页面右下角会显示“连接成功”，即可解锁“启动下载”按钮。
                     </p>
                   </div>
@@ -933,7 +969,7 @@ export default function App() {
                   环境依赖安装 (macOS)
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-5 bg-zinc-900 rounded-3xl text-white space-y-3">
+                  <div className="p-5 bg-zinc-900 rounded-3xl text-white space-y-3 relative group">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">yt-dlp</span>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-[8px] font-bold uppercase">核心</span>
@@ -941,8 +977,12 @@ export default function App() {
                     <div className="bg-black/50 rounded-xl p-3 font-mono text-[9px] text-zinc-400">
                       brew install yt-dlp
                     </div>
+                    <CopyButton 
+                      text="brew install yt-dlp" 
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100"
+                    />
                   </div>
-                  <div className="p-5 bg-zinc-900 rounded-3xl text-white space-y-3">
+                  <div className="p-5 bg-zinc-900 rounded-3xl text-white space-y-3 relative group">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">ffmpeg</span>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-[8px] font-bold uppercase">核心</span>
@@ -950,6 +990,10 @@ export default function App() {
                     <div className="bg-black/50 rounded-xl p-3 font-mono text-[9px] text-zinc-400">
                       brew install ffmpeg
                     </div>
+                    <CopyButton 
+                      text="brew install ffmpeg" 
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100"
+                    />
                   </div>
                 </div>
               </section>
@@ -986,31 +1030,43 @@ export default function App() {
                   OpenClaw API 接口
                 </h4>
                 <div className="bg-blue-500/5 border border-blue-500/10 rounded-3xl p-6 space-y-4">
-                  <p className="text-[11px] text-blue-900/60 leading-relaxed font-medium">
-                    您可以通过 POST 请求直接调用本地服务进行下载，非常适合 OpenClaw 或自动化脚本。
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] text-blue-900/60 leading-relaxed font-medium">
+                      您可以通过 API 直接调用服务。<b>注意：</b> 如果您在本地运行，请确保 API 地址指向您的本地或映射地址。
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                      <span className="text-[9px] font-bold text-blue-500 uppercase">Live API</span>
+                    </div>
+                  </div>
                   
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black rounded uppercase">POST</span>
-                        <code className="text-[10px] font-bold text-blue-900">/api/download</code>
-                      </div>
-                      <div className="bg-black rounded-xl p-4 font-mono text-[9px] text-blue-400/90 space-y-2">
-                        <div>{"{"}</div>
-                        <div className="pl-4">"url": "https://www.youtube.com/watch?v=...",</div>
-                        <div className="pl-4">"type": "video", <span className="text-white/20">// video | audio | subtitle</span></div>
-                        <div className="pl-4">"outputPath": "/Users/yuliu/Movies/YouTube DL/"</div>
-                        <div>{"}"}</div>
+                      <h5 className="text-[10px] font-bold text-blue-900 uppercase tracking-wider">1. API 自动发现 (推荐)</h5>
+                      <p className="text-[10px] text-blue-900/50">让 OpenClaw 访问此地址，它会自动理解所有接口：</p>
+                      <div className="relative group">
+                        <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-blue-400/90">
+                          GET https://yt-dlp.324893.xyz/api
+                        </div>
+                        <CopyButton text="https://yt-dlp.324893.xyz/api" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <h5 className="text-[10px] font-bold text-blue-900">cURL 示例：</h5>
-                      <div className="bg-black rounded-xl p-4 font-mono text-[9px] text-white/70 break-all">
-                        curl -X POST http://localhost:3000/api/download \<br/>
-                        -H "Content-Type: application/json" \<br/>
-                        -d '{"{"}"url": "视频链接", "type": "video"{"}"}'
+                      <h5 className="text-[10px] font-bold text-blue-900 uppercase tracking-wider">2. 视频下载接口</h5>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black rounded uppercase">POST</span>
+                        <code className="text-[10px] font-bold text-blue-900">/api/download</code>
+                      </div>
+                      <div className="relative group">
+                        <div className="bg-black rounded-xl p-4 font-mono text-[9px] text-blue-400/90 space-y-2">
+                          <div>{"{"}</div>
+                          <div className="pl-4">"url": "视频链接",</div>
+                          <div className="pl-4">"type": "video", <span className="text-white/20">// video | audio | subtitle</span></div>
+                          <div className="pl-4">"outputPath": "/Users/yuliu/Movies/YouTube DL/"</div>
+                          <div>{"}"}</div>
+                        </div>
+                        <CopyButton text={`{"url": "视频链接", "type": "video"}`} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100" />
                       </div>
                     </div>
                   </div>

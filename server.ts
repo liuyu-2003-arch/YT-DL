@@ -18,6 +18,33 @@ async function startServer() {
   const PORT = 3000;
 
   // API routes
+  app.get("/api", (req, res) => {
+    res.json({
+      name: "YT-DLP Architect API",
+      version: "1.0.0",
+      description: "Local API for video information extraction and downloading",
+      endpoints: {
+        info: {
+          path: "/api/info",
+          method: "GET",
+          params: { url: "string (required)" },
+          description: "Extract video metadata (title, thumbnail, resolution, etc.)"
+        },
+        download: {
+          path: "/api/download",
+          method: "POST",
+          body: {
+            url: "string (required)",
+            type: "video | audio | subtitle (default: video)",
+            outputPath: "string (optional)"
+          },
+          description: "Trigger a local download process using yt-dlp"
+        }
+      },
+      usage_example: "curl -X POST http://localhost:3000/api/download -H 'Content-Type: application/json' -d '{\"url\": \"YOUR_URL\", \"type\": \"video\"}'"
+    });
+  });
+
   app.get("/api/info", async (req, res) => {
     const { url } = req.query;
 
