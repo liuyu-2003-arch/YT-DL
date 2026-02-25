@@ -1032,7 +1032,7 @@ export default function App() {
                 <div className="bg-blue-500/5 border border-blue-500/10 rounded-3xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-[11px] text-blue-900/60 leading-relaxed font-medium">
-                      您可以通过 API 直接调用服务。<b>注意：</b> 如果您在本地运行，请确保 API 地址指向您的本地或映射地址。
+                      您可以通过 API 直接调用服务。<b>重要：</b> Vercel 仅支持“信息查询”，<b>“启动下载”</b> 必须调用您的本地地址或预览地址。
                     </p>
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
@@ -1042,7 +1042,7 @@ export default function App() {
                   
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <h5 className="text-[10px] font-bold text-blue-900 uppercase tracking-wider">1. API 自动发现 (推荐)</h5>
+                      <h5 className="text-[10px] font-bold text-blue-900 uppercase tracking-wider">1. API 自动发现 (Vercel/公网)</h5>
                       <p className="text-[10px] text-blue-900/50">让 OpenClaw 访问此地址，它会自动理解所有接口：</p>
                       <div className="relative group">
                         <div className="bg-black rounded-xl p-4 font-mono text-[10px] text-blue-400/90">
@@ -1053,7 +1053,8 @@ export default function App() {
                     </div>
 
                     <div className="space-y-2">
-                      <h5 className="text-[10px] font-bold text-blue-900 uppercase tracking-wider">2. 视频下载接口</h5>
+                      <h5 className="text-[10px] font-bold text-blue-900 uppercase tracking-wider">2. 视频下载接口 (必须指向本地/预览)</h5>
+                      <p className="text-[10px] text-amber-600 font-bold mb-1">⚠️ Vercel 域名不支持下载，请让 OpenClaw 调用下方地址：</p>
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black rounded uppercase">POST</span>
                         <code className="text-[10px] font-bold text-blue-900">/api/download</code>
@@ -1062,12 +1063,15 @@ export default function App() {
                         <div className="bg-black rounded-xl p-4 font-mono text-[9px] text-blue-400/90 space-y-2">
                           <div>{"{"}</div>
                           <div className="pl-4">"url": "视频链接",</div>
-                          <div className="pl-4">"type": "video", <span className="text-white/20">// video | audio | subtitle</span></div>
-                          <div className="pl-4">"outputPath": "/Users/yuliu/Movies/YouTube DL/"</div>
+                          <div className="pl-4">"type": "video"</div>
                           <div>{"}"}</div>
                         </div>
                         <CopyButton text={`{"url": "视频链接", "type": "video"}`} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100" />
                       </div>
+                      <p className="text-[9px] text-black/40 italic mt-1">
+                        下载端点建议使用预览地址：<br/>
+                        <span className="select-all font-bold">https://ais-pre-57gwno7opieonklcnniqub-35809293725.asia-northeast1.run.app/api/download</span>
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -5,9 +5,10 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { spawn } from "child_process";
 
-async function startServer() {
-  const app = express();
-  app.use(express.json());
+export const app = express();
+app.use(express.json());
+
+export async function createServerApp() {
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
     path: "/socket.io/",
@@ -17,12 +18,21 @@ async function startServer() {
   });
   const PORT = 3000;
 
+  // Health check for Vercel/Monitoring
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", environment: process.env.NODE_ENV || "development" });
+  });
+
   // API routes
   app.get("/api", (req, res) => {
     res.json({
       name: "YT-DLP Architect API",
       version: "1.0.0",
-      description: "Local API for video information extraction and downloading",
+      description: "API for video information extraction and downloading",
+      status: {
+        can_download: !!process.env.VERCEL ? "No (Vercel environment)" : "Yes (Local environment)",
+        platform: process.env.VERCEL ? "Vercel" : "Local/Container"
+      },
       endpoints: {
         info: {
           path: "/api/info",
@@ -38,10 +48,10 @@ async function startServer() {
             type: "video | audio | subtitle (default: video)",
             outputPath: "string (optional)"
           },
-          description: "Trigger a local download process using yt-dlp"
+          description: "Trigger a local download process. ONLY WORKS ON LOCAL SERVER."
         }
       },
-      usage_example: "curl -X POST http://localhost:3000/api/download -H 'Content-Type: application/json' -d '{\"url\": \"YOUR_URL\", \"type\": \"video\"}'"
+      usage_example: `curl -X POST ${process.env.VERCEL ? 'https://yt-dlp.324893.xyz' : 'http://localhost:3000'}/api/download -H 'Content-Type: application/json' -d '{"url": "YOUR_URL", "type": "video"}'`
     });
   });
 
@@ -230,9 +240,13 @@ async function startServer() {
     app.use(express.static("dist"));
   }
 
-  httpServer.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  return { httpServer, PORT };
 }
 
-startServer();
+if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
+  createServerApp().then(({ httpServer, PORT }) => {
+    httpServer.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  });
+}
