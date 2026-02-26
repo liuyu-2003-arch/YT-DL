@@ -2,13 +2,9 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { spawn } from "child_process";
-import { apiRouter } from "./src/api";
+import { app } from "./src/app";
 
-export const app = express();
-app.use(express.json());
-
-// Mount API routes
-app.use("/api", apiRouter);
+export { app };
 
 export async function createServerApp() {
   const httpServer = createServer(app);

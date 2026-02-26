@@ -1,12 +1,7 @@
 import express from "express";
-import fetch from "node-fetch";
 import { spawn } from "child_process";
 
 export const apiRouter = express.Router();
-
-apiRouter.get("/health", (req, res) => {
-  res.json({ status: "ok", environment: process.env.NODE_ENV || "development" });
-});
 
 apiRouter.get("/", (req, res) => {
   res.json({
