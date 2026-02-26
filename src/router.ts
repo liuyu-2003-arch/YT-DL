@@ -19,6 +19,16 @@ apiRouter.get("/", (req, res) => {
         params: { url: "string (required)" },
         description: "Extract video metadata (title, thumbnail, resolution, etc.)"
       },
+      command: {
+        path: "/api/command",
+        method: "GET",
+        params: { 
+          url: "string (required)", 
+          type: "video | audio | subtitle (default: video)",
+          outputPath: "string (optional)"
+        },
+        description: "Generate the yt-dlp command string without executing it. Perfect for OpenClaw to run locally."
+      },
       download: {
         path: "/api/download",
         method: "POST",
@@ -31,6 +41,33 @@ apiRouter.get("/", (req, res) => {
       }
     },
     usage_example: `curl -X POST ${process.env.VERCEL ? 'https://yt-dlp.324893.xyz' : 'http://localhost:3000'}/api/download -H 'Content-Type: application/json' -d '{"url": "YOUR_URL", "type": "video"}'`
+  });
+});
+
+apiRouter.get("/command", (req, res) => {
+  const { url, type, outputPath } = req.query;
+
+  if (!url || typeof url !== 'string') {
+    return res.status(400).json({ error: 'Missing URL parameter' });
+  }
+
+  const path = (outputPath as string) || "/Users/yuliu/Movies/YouTube DL/";
+  const downloadType = (type as string) || "video";
+
+  let command = "";
+  if (downloadType === "video") {
+    command = `yt-dlp --no-playlist "${url}" -o "${path}%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --embed-subs --embed-metadata --merge-output-format mkv --ignore-errors --no-cache-dir`;
+  } else if (downloadType === "audio") {
+    command = `yt-dlp --no-playlist "${url}" -o "${path}%(title)s/%(title)s.%(ext)s" -x --audio-format mp3 --audio-quality 0 --embed-thumbnail --embed-metadata --ignore-errors --no-cache-dir`;
+  } else if (downloadType === "subtitle") {
+    command = `yt-dlp --no-playlist "${url}" -o "${path}%(title)s/%(title)s.%(ext)s" --write-subs --write-auto-subs --sub-langs "en.*,zh-Hans,zh-Hant,zh-Hans-en,zh-Hant-en,zh.*" --convert-subs srt --skip-download --ignore-errors --no-cache-dir`;
+  }
+
+  res.json({ 
+    url,
+    type: downloadType,
+    command,
+    description: downloadType === "subtitle" ? "Command to download subtitles only (skips video)" : `Command to download ${downloadType}`
   });
 });
 
